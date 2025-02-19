@@ -2,7 +2,10 @@ import streamlit as st
 import pandas as pd
 from utils.pdf_processor import process_pdf
 from utils.search import search_content
+from utils.law_updater import LawUpdater, update_categories_from_database
 from data.categories import CATEGORIES
+import json
+from datetime import datetime
 
 # Set page config
 st.set_page_config(
@@ -17,6 +20,27 @@ with open('assets/styles.css') as f:
 
 def main():
     st.title("Νομικός Βοηθός για Αστυνομικούς")
+
+    # Add update button in sidebar
+    st.sidebar.title("Διαχείριση")
+    if st.sidebar.button("🔄 Ενημέρωση Νομικής Βάσης"):
+        with st.spinner("Έλεγχος για ενημερώσεις..."):
+            updater = LawUpdater()
+            if updater.update_laws():
+                st.sidebar.success("Η βάση δεδομένων ενημερώθηκε επιτυχώς!")
+            else:
+                st.sidebar.info("Δεν βρέθηκαν νέες ενημερώσεις.")
+
+    # Show last update time
+    try:
+        with open("data/law_database.json", 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            last_update = data.get('last_update', {})
+            if last_update:
+                last_update_time = max(datetime.fromisoformat(date) for date in last_update.values())
+                st.sidebar.text(f"Τελευταία ενημέρωση:\n{last_update_time.strftime('%d/%m/%Y %H:%M')}")
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        pass
 
     # Sidebar for main navigation
     st.sidebar.title("Κατηγορίες")
