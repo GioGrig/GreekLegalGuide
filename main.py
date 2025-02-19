@@ -6,7 +6,7 @@ from data.categories import CATEGORIES
 
 # Set page config
 st.set_page_config(
-    page_title="Νομική Αναφορά",
+    page_title="Νομικός Βοηθός",
     page_icon="⚖️",
     layout="wide"
 )
@@ -16,8 +16,8 @@ with open('assets/styles.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 def main():
-    st.title("Νομική Αναφορά για Αστυνομικούς")
-    
+    st.title("Νομικός Βοηθός για Αστυνομικούς")
+
     # Sidebar for main navigation
     st.sidebar.title("Κατηγορίες")
     category = st.sidebar.selectbox(
@@ -27,10 +27,10 @@ def main():
 
     # Search functionality
     search_query = st.text_input("🔍 Αναζήτηση νομικών διατάξεων...", "")
-    
+
     # Main content area
     st.header(category)
-    
+
     # Display subcategories and articles
     if category in CATEGORIES:
         for subcategory, articles in CATEGORIES[category].items():
@@ -39,12 +39,12 @@ def main():
                     st.markdown(f"""
                     ### {article['title']}
                     **Νόμος:** {article['law']}
-                    
+
                     {article['content']}
-                    
+
                     **Ποινή:** {article['penalty']}
                     """)
-    
+
     # Search results
     if search_query:
         results = search_content(search_query, CATEGORIES)
