@@ -1,0 +1,43 @@
+/* Main styles */
+.stApp {
+    font-family: 'Arial', sans-serif;
+}
+
+/* Headers */
+h1 {
+    color: #1f4e79;
+    font-weight: bold;
+    margin-bottom: 2rem;
+}
+
+h2 {
+    color: #2c3e50;
+    margin-top: 1.5rem;
+}
+
+/* Sidebar */
+.sidebar .sidebar-content {
+    background-color: #f8f9fa;
+}
+
+/* Expanders */
+.streamlit-expanderHeader {
+    background-color: #f0f2f6;
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+/* Search box */
+.stTextInput input {
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    border: 2px solid #e0e0e0;
+}
+
+/* Article containers */
+.stExpander {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
