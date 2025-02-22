@@ -19,10 +19,27 @@ with open('assets/styles.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 def main():
-    st.title("Νομικός Βοηθός για Αστυνομικούς")
+    # Add a welcome message with user instructions
+    st.title("🏛️ Νομικός Βοηθός για Αστυνομικούς")
+    st.markdown("""
+    ### Καλώς ήρθατε στον Νομικό Βοηθό!
+    Αυτή η εφαρμογή σας βοηθά να:
+    - 📚 Αναζητήσετε νομικές διατάξεις
+    - 📋 Δείτε πρόσφατες ενημερώσεις
+    - 🔍 Βρείτε πληροφορίες για συγκεκριμένα άρθρα
+    """)
 
-    # Add update button in sidebar
+    # Add a simple counter in the sidebar to demonstrate interactivity
     st.sidebar.title("Διαχείριση")
+    if 'counter' not in st.session_state:
+        st.session_state.counter = 0
+
+    st.sidebar.subheader("Δοκιμαστικό Κουμπί")
+    if st.sidebar.button("Πατήστε με! 🖱️"):
+        st.session_state.counter += 1
+    st.sidebar.write(f"Πατήσατε το κουμπί {st.session_state.counter} φορές")
+
+    # Update button in sidebar
     if st.sidebar.button("🔄 Ενημέρωση Νομικής Βάσης"):
         with st.spinner("Έλεγχος για ενημερώσεις..."):
             updater = LawUpdater()
@@ -49,11 +66,12 @@ def main():
         list(CATEGORIES.keys())
     )
 
-    # Search functionality
-    search_query = st.text_input("🔍 Αναζήτηση νομικών διατάξεων...", "")
+    # Search functionality with placeholder text
+    search_query = st.text_input("🔍 Αναζήτηση νομικών διατάξεων...", 
+                                placeholder="π.χ. κατοικίδια, ποινές, πρόστιμα...")
 
-    # Main content area
-    st.header(category)
+    # Main content area with category description
+    st.header(f"📖 {category}")
 
     # Display subcategories and articles
     if category in CATEGORIES:
@@ -67,17 +85,24 @@ def main():
                     {article['content']}
 
                     **Ποινή:** {article['penalty']}
+                    ---
                     """)
 
-    # Search results
+    # Search results with improved formatting
     if search_query:
         results = search_content(search_query, CATEGORIES)
-        st.subheader("Αποτελέσματα Αναζήτησης")
-        for result in results:
-            st.markdown(f"""
-            #### {result['title']}
-            {result['content']}
-            """)
+        if results:
+            st.subheader("🔍 Αποτελέσματα Αναζήτησης")
+            for result in results:
+                with st.expander(f"📑 {result['title']}"):
+                    st.markdown(f"""
+                    **Κατηγορία:** {result['category']}
+                    **Υποκατηγορία:** {result['subcategory']}
+
+                    {result['content']}
+                    """)
+        else:
+            st.info("Δεν βρέθηκαν αποτελέσματα για την αναζήτησή σας.")
 
 if __name__ == "__main__":
     main()
