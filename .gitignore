@@ -1,0 +1,8 @@
+
+.streamlit/
+__pycache__/
+*.pyc
+.env
+.replit
+.gitattributes
+uv.lock
