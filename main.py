@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS for better readability of full articles
+# Custom CSS for better readability and mobile responsiveness
 st.markdown("""
 <style>
     .law-article {
@@ -22,6 +22,7 @@ st.markdown("""
         padding: 20px;
         border-radius: 5px;
         margin: 10px 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .article-title {
         color: #1f4e79;
@@ -40,70 +41,155 @@ st.markdown("""
         border-radius: 4px;
         margin-top: 10px;
     }
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .law-article {
+            padding: 10px;
+        }
+        .article-title {
+            font-size: 1.1em;
+        }
+        .article-content {
+            font-size: 0.9em;
+        }
+    }
+    /* Version badge */
+    .version-badge {
+        background-color: #1f4e79;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+    }
 </style>
 """, unsafe_allow_html=True)
 
+# Initialize session state for caching
+if 'cache_timestamp' not in st.session_state:
+    st.session_state.cache_timestamp = datetime.now()
+if 'cached_categories' not in st.session_state:
+    st.session_state.cached_categories = CATEGORIES
+
+def get_app_version():
+    """Get current version of the law database"""
+    try:
+        with open("data/law_database.json", 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            last_update = data.get('last_update', {})
+            if last_update:
+                return max(datetime.fromisoformat(date) for date in last_update.values())
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        return datetime.now()
+    return datetime.now()
+
+def show_help():
+    """Display help and documentation"""
+    st.markdown("""
+    ### 📖 Οδηγίες Χρήσης
+
+    1. **Πλοήγηση**
+       - Χρησιμοποιήστε το μενού στα αριστερά για να επιλέξετε κατηγορία
+       - Κάθε κατηγορία περιέχει υποκατηγορίες με σχετικά άρθρα
+
+    2. **Αναζήτηση**
+       - Πληκτρολογήστε λέξεις-κλειδιά στο πεδίο αναζήτησης
+       - Τα αποτελέσματα θα εμφανιστούν αυτόματα
+
+    3. **Ενημερώσεις**
+       - Το σύστημα ενημερώνεται αυτόματα με νέες νομικές διατάξεις
+       - Δείτε την ημερομηνία τελευταίας ενημέρωσης στο κάτω μέρος
+
+    4. **Προβολή Άρθρων**
+       - Κάντε κλικ στα βέλη ▼ για να δείτε το πλήρες περιεχόμενο
+       - Οι ποινές εμφανίζονται με κόκκινο φόντο
+    """)
+
 def main():
-    # Add a welcome message with user instructions
+    # Display version badge
+    version_date = get_app_version()
+    st.markdown(f"""
+    <div style="text-align: right;">
+        <span class="version-badge">v.{version_date.strftime('%Y.%m.%d')}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Main title and welcome message
     st.title("🏛️ Νομικός Βοηθός για Αστυνομικούς")
     st.markdown("""
     ### Καλώς ήρθατε στον Νομικό Βοηθό!
     Αυτή η εφαρμογή παρέχει πρόσβαση στο πλήρες περιεχόμενο των νομικών διατάξεων και άρθρων.
-
-    - 📚 Αναζητήστε νομικές διατάξεις
-    - 📋 Δείτε το πλήρες κείμενο κάθε άρθρου
-    - 🔍 Εξερευνήστε όλες τις λεπτομέρειες των νόμων
     """)
 
-    # Sidebar navigation
+    # Help button in sidebar
     st.sidebar.title("Πλοήγηση")
-    category = st.sidebar.selectbox(
-        "Επιλέξτε Κατηγορία:",
-        list(CATEGORIES.keys())
-    )
+    if st.sidebar.button("ℹ️ Βοήθεια"):
+        show_help()
 
-    # Search functionality with improved placeholder
+    # Category selection with error handling
+    try:
+        category = st.sidebar.selectbox(
+            "Επιλέξτε Κατηγορία:",
+            list(st.session_state.cached_categories.keys())
+        )
+    except Exception as e:
+        st.error("Σφάλμα στη φόρτωση κατηγοριών. Παρακαλώ ανανεώστε τη σελίδα.")
+        st.stop()
+
+    # Search with loading state
     search_query = st.text_input(
         "🔍 Αναζήτηση νομικών διατάξεων...",
         placeholder="π.χ. κατοικίδια, ποινές, πρόστιμα, άδειες..."
     )
 
-    # Main content area
-    st.header(f"📖 {category}")
+    # Main content area with error handling
+    try:
+        st.header(f"📖 {category}")
 
-    # Display full content of subcategories and articles
-    if category in CATEGORIES:
-        for subcategory, articles in CATEGORIES[category].items():
-            with st.expander(f"📚 {subcategory}", expanded=True):
-                for article in articles:
-                    st.markdown(f"""
-                    <div class="law-article">
-                        <div class="article-title">{article['title']}</div>
-                        <strong>Νόμος:</strong> {article['law']}
-                        <div class="article-content">{article['content']}</div>
-                        <div class="article-penalty">
-                            <strong>Ποινή:</strong> {article['penalty']}
+        if category in st.session_state.cached_categories:
+            for subcategory, articles in st.session_state.cached_categories[category].items():
+                with st.expander(f"📚 {subcategory}", expanded=True):
+                    for article in articles:
+                        st.markdown(f"""
+                        <div class="law-article">
+                            <div class="article-title">{article['title']}</div>
+                            <strong>Νόμος:</strong> {article['law']}
+                            <div class="article-content">{article['content']}</div>
+                            <div class="article-penalty">
+                                <strong>Ποινή:</strong> {article['penalty']}
+                            </div>
                         </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
 
-    # Enhanced search results
-    if search_query:
-        results = search_content(search_query, CATEGORIES)
-        if results:
-            st.subheader("🔍 Αποτελέσματα Αναζήτησης")
-            for result in results:
-                with st.expander(f"📑 {result['title']}", expanded=True):
-                    st.markdown(f"""
-                    <div class="law-article">
-                        <strong>Κατηγορία:</strong> {result['category']}
-                        <br>
-                        <strong>Υποκατηγορία:</strong> {result['subcategory']}
-                        <div class="article-content">{result['content']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-        else:
-            st.info("Δεν βρέθηκαν αποτελέσματα για την αναζήτησή σας.")
+        # Search results with loading state
+        if search_query:
+            with st.spinner("Αναζήτηση..."):
+                results = search_content(search_query, st.session_state.cached_categories)
+                if results:
+                    st.subheader("🔍 Αποτελέσματα Αναζήτησης")
+                    for result in results:
+                        with st.expander(f"📑 {result['title']}", expanded=True):
+                            st.markdown(f"""
+                            <div class="law-article">
+                                <strong>Κατηγορία:</strong> {result['category']}
+                                <br>
+                                <strong>Υποκατηγορία:</strong> {result['subcategory']}
+                                <div class="article-content">{result['content']}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                else:
+                    st.info("Δεν βρέθηκαν αποτελέσματα για την αναζήτησή σας.")
+
+    except Exception as e:
+        st.error("Παρουσιάστηκε σφάλμα κατά την προβολή του περιεχομένου. Παρακαλώ δοκιμάστε ξανά.")
+        st.exception(e)
+
+    # Footer with version info
+    st.markdown("---")
+    st.markdown(f"""
+    <div style="text-align: center; color: #666;">
+        Τελευταία ενημέρωση: {version_date.strftime('%d/%m/%Y %H:%M')}
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
