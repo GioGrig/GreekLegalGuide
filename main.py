@@ -38,6 +38,7 @@ st.markdown("""
         font-size: 1em;
         line-height: 1.6;
         margin: 15px 0;
+        white-space: pre-wrap;  # Add this to preserve formatting
     }
     .article-penalty {
         color: #721c24;

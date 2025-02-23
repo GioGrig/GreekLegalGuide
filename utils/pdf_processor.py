@@ -1,31 +1,37 @@
 import PyPDF2
 import re
-from typing import List, Dict
+from typing import List, Dict, Optional
+import logging
 
-def process_pdf(file_path):
+logger = logging.getLogger(__name__)
+
+def process_pdf(file_path: str) -> Optional[str]:
     """
-    Process PDF files and extract text with enhanced Greek character support
+    Process PDF files and extract complete text with enhanced Greek character support
     """
     text = ""
     try:
         with open(file_path, 'rb') as file:
             pdf_reader = PyPDF2.PdfReader(file)
             for page in pdf_reader.pages:
-                text += page.extract_text()
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n\n"
     except Exception as e:
-        print(f"Error processing PDF {file_path}: {str(e)}")
+        logger.error(f"Error processing PDF {file_path}: {str(e)}")
         return None
 
-    # Clean and normalize text with enhanced Greek support
+    # Clean and normalize text
     text = clean_text(text)
     return text
 
-def clean_text(text):
+def clean_text(text: str) -> str:
     """
-    Clean and normalize extracted text with enhanced Greek character support
+    Enhanced text cleaning with better Greek support and formatting
     """
-    # Remove extra whitespace
-    text = re.sub(r'\s+', ' ', text)
+    # Remove extra whitespace while preserving paragraph breaks
+    text = re.sub(r'\s*\n\s*\n\s*', '\n\n', text)
+    text = re.sub(r' +', ' ', text)
 
     # Enhanced Greek character normalization
     greek_chars = {
@@ -39,42 +45,57 @@ def clean_text(text):
 
     return text.strip()
 
-def extract_law_sections(text) -> List[Dict[str, str]]:
+def extract_law_sections(text: str) -> List[Dict[str, str]]:
     """
-    Extract law sections from the processed text with improved article detection
-    Returns a list of dictionaries containing article information
+    Enhanced extraction of law sections with better article and category detection
     """
     articles = []
-    current_article = {"title": "", "content": "", "law": "", "penalty": ""}
+    current_article = {"title": "", "content": "", "law": "", "penalty": "", "category": ""}
 
+    # Improved pattern matching for article numbers and categories
+    article_pattern = re.compile(r'Άρθρο\s+(\d+[α-ω]?)\s*[-–]\s*(.+?)(?=\n|$)', re.IGNORECASE)
+    category_pattern = re.compile(r'ΚΕΦΑΛΑΙΟ|ΜΕΡΟΣ|ΤΜΗΜΑ|ΤΙΤΛΟΣ\s+[ΑΒΓΔ\d]+\s*[-–]\s*(.+?)(?=\n|$)', re.IGNORECASE)
+    penalty_pattern = re.compile(r'(?:τιμωρείται|επιβάλλεται).+?(?:φυλάκιση|κάθειρξη|πρόστιμο|ποινή).+?\.', re.IGNORECASE)
+
+    current_category = ""
     lines = text.split('\n')
+
     for i, line in enumerate(lines):
         line = line.strip()
 
-        # Detect article starts
-        if line.startswith('Άρθρο') or line.startswith('ΑΡΘΡΟ'):
-            if current_article["content"]:  # Save previous article if exists
+        # Detect category changes
+        category_match = category_pattern.search(line)
+        if category_match:
+            current_category = category_match.group(1).strip()
+            continue
+
+        # Detect new articles
+        article_match = article_pattern.search(line)
+        if article_match:
+            if current_article["content"]:
                 articles.append(current_article.copy())
 
-            # Start new article
+            article_num = article_match.group(1)
+            article_title = article_match.group(2).strip()
+
             current_article = {
-                "title": line,
+                "title": f"Άρθρο {article_num} - {article_title}",
                 "content": line + "\n",
-                "law": "",  # Will be set based on context
-                "penalty": ""  # Will be extracted from content if available
+                "law": "Π.Κ. " + article_num,
+                "penalty": "",
+                "category": current_category
             }
+            continue
 
-        # Detect law reference
-        elif "Ν." in line or "Π.Δ." in line:
-            current_article["law"] = line
-
-        # Detect penalties (common penalty-related phrases in Greek)
-        elif any(phrase in line.lower() for phrase in ["ποινή", "κύρωση", "πρόστιμο", "φυλάκιση"]):
-            current_article["penalty"] = line
-
-        # Add line to current article's content
-        else:
+        # Add content to current article
+        if current_article["content"]:
             current_article["content"] += line + "\n"
+
+            # Look for penalty information if not already found
+            if not current_article["penalty"]:
+                penalty_match = penalty_pattern.search(line)
+                if penalty_match:
+                    current_article["penalty"] = penalty_match.group(0)
 
     # Add the last article
     if current_article["content"]:
@@ -82,9 +103,9 @@ def extract_law_sections(text) -> List[Dict[str, str]]:
 
     return articles
 
-def process_pdf_to_articles(file_path, law_category) -> List[Dict[str, str]]:
+def process_pdf_to_articles(file_path: str, law_category: str) -> List[Dict[str, str]]:
     """
-    Process a PDF file and return structured articles with full content
+    Process a PDF file and return structured articles with complete content
     """
     text = process_pdf(file_path)
     if text:
