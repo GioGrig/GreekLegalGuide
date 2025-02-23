@@ -1,12 +1,15 @@
 import streamlit as st
 import pandas as pd
-from utils.pdf_processor import process_pdf, process_pdf_to_articles
+from utils.pdf_processor import process_pdf_to_articles, process_multiple_pdfs
 from utils.search import search_content
 from utils.law_updater import LawUpdater, update_categories_from_database
 from data.categories import CATEGORIES
 import json
 from datetime import datetime
 import logging
+import tempfile
+import os
+from pathlib import Path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -113,9 +116,45 @@ def show_help():
        - Οι ποινές εμφανίζονται με κόκκινο φόντο
     """)
 
+def process_uploaded_files(uploaded_files):
+    """Process uploaded PDF files and update categories"""
+    temp_dir = Path("temp_pdfs")
+    temp_dir.mkdir(exist_ok=True)
+
+    try:
+        # Save uploaded files temporarily
+        for uploaded_file in uploaded_files:
+            temp_path = temp_dir / uploaded_file.name
+            with open(temp_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+        # Process all PDFs in the temp directory
+        all_articles = process_multiple_pdfs(str(temp_dir))
+
+        # Update session state with new articles
+        for category, subcategories in all_articles.items():
+            if category not in st.session_state.cached_categories:
+                st.session_state.cached_categories[category] = {}
+
+            for subcategory, articles in subcategories.items():
+                if subcategory not in st.session_state.cached_categories[category]:
+                    st.session_state.cached_categories[category][subcategory] = []
+                st.session_state.cached_categories[category][subcategory].extend(articles)
+
+        return True
+    except Exception as e:
+        logger.error(f"Error processing PDFs: {str(e)}")
+        return False
+    finally:
+        # Cleanup temp files
+        for file in temp_dir.glob("*.pdf"):
+            file.unlink()
+        temp_dir.rmdir()
+
+
 def main():
     try:
-        # Initialize session state
+        # Initialize session state for categories if not exists
         if 'cached_categories' not in st.session_state:
             st.session_state.cached_categories = CATEGORIES
 
@@ -138,13 +177,33 @@ def main():
             st.session_state.show_help = True
             show_help()
 
+        # Admin section for PDF uploads
+        with st.sidebar.expander("🔒 Διαχείριση Περιεχομένου"):
+            st.write("Ανέβασμα νέων νομικών κειμένων:")
+            uploaded_files = st.file_uploader(
+                "Επιλέξτε PDF αρχεία",
+                type=['pdf'],
+                accept_multiple_files=True,
+                key="pdf_uploader"
+            )
+
+            if uploaded_files:
+                if st.button("Ενημέρωση Περιεχομένου"):
+                    with st.spinner("Επεξεργασία αρχείων..."):
+                        success = process_uploaded_files(uploaded_files)
+                        if success:
+                            st.success("Το περιεχόμενο ενημερώθηκε επιτυχώς!")
+                        else:
+                            st.error("Παρουσιάστηκε σφάλμα κατά την επεξεργασία των αρχείων.")
+
+
         # Category selection
         selected_category = st.sidebar.selectbox(
             "Επιλέξτε Κατηγορία:",
             list(st.session_state.cached_categories.keys())
         )
 
-        # Welcome message in sidebar (permanent fixture) - moved below categories
+        # Welcome message in sidebar (permanent fixture)
         st.sidebar.markdown("""
         <div class="sidebar-welcome">
         Αυτή η διαδικτυακή εφαρμογή δημιουργήθηκε με τη βοήθεια τεχνητής νοημοσύνης από μάχιμους αστυνομικούς για μάχιμους αστυνομικούς. Είθε η χρήση της τεχνολογίας να μας βοηθήσει στην εκπλήρωση του δύσκολου και πολλές φορές επικίνδυνου έργο μας, παρέχοντας τις καλύτερες δυνατές υπηρεσίες προς τον πολίτη όπως έχουμε ορκιστεί. Καλές υπηρεσίες, να προσέχετε ο ένας τον άλλον, και πάντα το σχόλασμα να σας βρίσκει γέρους και με τις οικογένειές σας.

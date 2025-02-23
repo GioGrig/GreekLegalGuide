@@ -1,7 +1,9 @@
 import PyPDF2
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import logging
+from pathlib import Path
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -45,74 +47,116 @@ def clean_text(text: str) -> str:
 
     return text.strip()
 
-def extract_law_sections(text: str) -> List[Dict[str, str]]:
+def get_category_from_filename(filename: str) -> Tuple[str, str]:
     """
-    Enhanced extraction of law sections with better article and category detection
+    Determine the main category and subcategory based on filename
     """
+    filename = filename.lower()
+    categories = {
+        'ποινικοσ κωδικασ': ('ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ', ''),
+        'ναρκωτικων': ('ΝΑΡΚΩΤΙΚΑ', 'Διακίνηση και Κατοχή'),
+        'οπλων': ('ΟΠΛΑ', 'Οπλοκατοχή'),
+        'κατοικιδια': ('ΝΟΜΟΣ ΠΕΡΙ ΚΑΤΟΙΚΙΔΙΩΝ', 'Βασικές Διατάξεις'),
+        'ενδοοικογενειακης': ('ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ', 'Βασικές Διατάξεις'),
+        'ηλεκτρονικο': ('ΗΛΕΚΤΡΟΝΙΚΟ ΕΓΚΛΗΜΑ', 'Βασικές Διατάξεις'),
+        'δικονομιασ': ('ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ', 'Γενικές Διατάξεις'),
+        'cyber': ('ΗΛΕΚΤΡΟΝΙΚΟ ΕΓΚΛΗΜΑ', 'Κυβερνοέγκλημα'),
+        'poinikoi_nomoi': ('ΕΙΔΙΚΟΙ ΠΟΙΝΙΚΟΙ ΝΟΜΟΙ', 'Γενικές Διατάξεις')
+    }
+
+    for key, (category, subcategory) in categories.items():
+        if key in filename:
+            return category, subcategory
+    return 'ΓΕΝΙΚΑ', 'Γενικές Διατάξεις'
+
+def process_pdf_to_articles(file_path: str) -> List[Dict[str, str]]:
+    """
+    Process a PDF file and return structured articles with complete content
+    """
+    text = process_pdf(file_path)
+    if not text:
+        return []
+
+    # Get the base category from filename
+    filename = os.path.basename(file_path)
+    main_category, default_subcategory = get_category_from_filename(filename)
+
     articles = []
-    current_article = {"title": "", "content": "", "law": "", "penalty": "", "category": ""}
+    current_article = None
+    current_subcategory = default_subcategory
 
-    # Improved pattern matching for article numbers and categories
-    article_pattern = re.compile(r'Άρθρο\s+(\d+[α-ω]?)\s*[-–]\s*(.+?)(?=\n|$)', re.IGNORECASE)
-    category_pattern = re.compile(r'ΚΕΦΑΛΑΙΟ|ΜΕΡΟΣ|ΤΜΗΜΑ|ΤΙΤΛΟΣ\s+[ΑΒΓΔ\d]+\s*[-–]\s*(.+?)(?=\n|$)', re.IGNORECASE)
-    penalty_pattern = re.compile(r'(?:τιμωρείται|επιβάλλεται).+?(?:φυλάκιση|κάθειρξη|πρόστιμο|ποινή).+?\.', re.IGNORECASE)
+    # Split text into sections
+    sections = text.split('\n\n')
 
-    current_category = ""
-    lines = text.split('\n')
+    # Patterns for article and category detection
+    article_pattern = re.compile(r'(?:Άρθρο|ΑΡΘΡΟ)\s+(\d+[α-ω]?)\s*[-–]\s*(.+?)(?=\n|$)', re.IGNORECASE)
+    category_pattern = re.compile(r'(?:ΚΕΦΑΛΑΙΟ|ΜΕΡΟΣ|ΤΜΗΜΑ|ΤΙΤΛΟΣ)\s+[ΑΒΓΔ\d]+\s*[-–]\s*(.+?)(?=\n|$)', re.IGNORECASE)
 
-    for i, line in enumerate(lines):
-        line = line.strip()
-
-        # Detect category changes
-        category_match = category_pattern.search(line)
-        if category_match:
-            current_category = category_match.group(1).strip()
+    for section in sections:
+        if not section.strip():
             continue
 
-        # Detect new articles
-        article_match = article_pattern.search(line)
+        # Check for category headers
+        category_match = category_pattern.search(section)
+        if category_match:
+            current_subcategory = category_match.group(1).strip()
+            continue
+
+        # Check for article headers
+        article_match = article_pattern.search(section)
         if article_match:
-            if current_article["content"]:
-                articles.append(current_article.copy())
+            if current_article:
+                articles.append(current_article)
 
             article_num = article_match.group(1)
             article_title = article_match.group(2).strip()
 
             current_article = {
-                "title": f"Άρθρο {article_num} - {article_title}",
-                "content": line + "\n",
-                "law": "Π.Κ. " + article_num,
-                "penalty": "",
-                "category": current_category
+                'title': f"Άρθρο {article_num} - {article_title}",
+                'content': section.strip(),
+                'category': main_category,
+                'subcategory': current_subcategory,
+                'law': f"{main_category} {article_num}",
+                'penalty': ''
             }
-            continue
-
-        # Add content to current article
-        if current_article["content"]:
-            current_article["content"] += line + "\n"
-
-            # Look for penalty information if not already found
-            if not current_article["penalty"]:
-                penalty_match = penalty_pattern.search(line)
-                if penalty_match:
-                    current_article["penalty"] = penalty_match.group(0)
+        elif current_article:
+            current_article['content'] += '\n' + section.strip()
+            # Look for penalty information
+            if any(word in section.lower() for word in ['τιμωρείται', 'ποινή', 'κύρωση', 'πρόστιμο']):
+                current_article['penalty'] = section.strip()
 
     # Add the last article
-    if current_article["content"]:
+    if current_article:
         articles.append(current_article)
 
     return articles
 
-def process_pdf_to_articles(file_path: str, law_category: str) -> List[Dict[str, str]]:
+def process_multiple_pdfs(pdf_directory: str) -> Dict[str, List[Dict[str, str]]]:
     """
-    Process a PDF file and return structured articles with complete content
+    Process all PDFs in a directory and organize articles by category
     """
-    text = process_pdf(file_path)
-    if text:
-        articles = extract_law_sections(text)
-        # Add category information to each article
-        for article in articles:
-            if not article["law"]:
-                article["law"] = law_category
-        return articles
-    return []
+    all_articles = {}
+    pdf_dir = Path(pdf_directory)
+
+    for pdf_file in pdf_dir.glob("*.pdf"):
+        try:
+            logger.info(f"Processing {pdf_file}")
+            articles = process_pdf_to_articles(str(pdf_file))
+
+            # Organize articles by their determined categories
+            for article in articles:
+                category = article["category"]
+                if category not in all_articles:
+                    all_articles[category] = {}
+
+                subcategory = article["subcategory"]
+                if subcategory not in all_articles[category]:
+                    all_articles[category][subcategory] = []
+
+                all_articles[category][subcategory].append(article)
+
+        except Exception as e:
+            logger.error(f"Error processing {pdf_file}: {str(e)}")
+            continue
+
+    return all_articles
