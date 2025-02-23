@@ -117,16 +117,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def get_source_url(category: str) -> str:
-    """Get the official source URL for a given category"""
-    law_updater = LawUpdater()
-    source = law_updater.sources.get(category, "#")
-
-    # Handle local PDF files
-    if source and source.startswith("/"):
-        return source[1:]  # Remove leading slash for local files
-    return source
-
 def show_help():
     """Display help and documentation"""
     st.markdown("""
@@ -261,11 +251,18 @@ def main():
 
                     if source_path != "#":
                         if is_local:
-                            download_link = get_binary_file_downloader_html(source_path, '📄 Κατέβασμα Πλήρους Κειμένου Νόμου (PDF)')
-                            if download_link:
-                                st.markdown(download_link, unsafe_allow_html=True)
+                            st.markdown("### 📄 Πλήρες Κείμενο Νόμου")
+                            if os.path.exists(source_path):
+                                with open(source_path, "rb") as pdf_file:
+                                    PDFbyte = pdf_file.read()
+                                st.download_button(
+                                    label="Κατέβασμα PDF",
+                                    data=PDFbyte,
+                                    file_name=os.path.basename(source_path),
+                                    mime='application/pdf'
+                                )
                             else:
-                                st.error("Το αρχείο PDF δεν είναι προσωρινά διαθέσιμο.")
+                                st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
                         else:
                             st.markdown(f"""
                             <div style="text-align: right; margin-bottom: 20px;">
