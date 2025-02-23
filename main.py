@@ -96,7 +96,12 @@ st.markdown("""
 def get_source_url(category: str) -> str:
     """Get the official source URL for a given category"""
     law_updater = LawUpdater()
-    return law_updater.sources.get(category, "#")
+    source = law_updater.sources.get(category, "#")
+
+    # Handle local PDF files
+    if source and source.startswith("/"):
+        return source[1:]  # Remove leading slash for local files
+    return source
 
 def show_help():
     """Display help and documentation"""
