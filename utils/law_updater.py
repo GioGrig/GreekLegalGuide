@@ -10,7 +10,11 @@ class LawUpdater:
         self.sources = {
             "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/poinikos-kodikas",
             "ΝΑΡΚΩΤΙΚΑ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/n-4139-2013",
-            "ΟΠΛΑ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/n-2168-1993"
+            "ΟΠΛΑ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/n-2168-1993",
+            "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/n-3500-2006",
+            "ΠΔ 141/1991": "https://www.kodiko.gr/nomothesia/document/619227",
+            "ΤΡΟΧΑΙΑ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/kodikas-odikis-kykloforias-kok",
+            "ΝΟΜΟΣ ΠΕΡΙ ΚΑΤΟΙΚΙΔΙΩΝ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/n-4830-2021"
         }
         self.last_update = self._load_last_update()
 

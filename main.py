@@ -93,6 +93,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+def get_source_url(category: str) -> str:
+    """Get the official source URL for a given category"""
+    law_updater = LawUpdater()
+    return law_updater.sources.get(category, "#")
+
 def show_help():
     """Display help and documentation"""
     st.markdown("""
@@ -222,6 +227,17 @@ def main():
 
                 # Display category content
                 if selected_category in st.session_state.cached_categories:
+                    # Add source link at the category level
+                    source_url = get_source_url(selected_category)
+                    if source_url != "#":
+                        st.markdown(f"""
+                        <div style="text-align: right; margin-bottom: 20px;">
+                            <a href="{source_url}" target="_blank" style="color: #1f4e79;">
+                                📄 Πλήρες Κείμενο Νόμου
+                            </a>
+                        </div>
+                        """, unsafe_allow_html=True)
+
                     for subcategory, articles in st.session_state.cached_categories[selected_category].items():
                         with st.expander(f"📚 {subcategory}", expanded=True):
                             for article in articles:
