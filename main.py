@@ -27,17 +27,37 @@ def get_binary_file_downloader_html(bin_file_path, file_label='File'):
         logger.error(f"Error creating download link for {bin_file_path}: {str(e)}")
         return None
 
-def get_source_url(category: str) -> tuple:
-    """Get the official source URL or PDF path for a given category"""
+def get_source_url(category: str, subcategory: str = None) -> tuple:
+    """Get the official source URL or PDF path for a given category and optional subcategory"""
     law_updater = LawUpdater()
     source = law_updater.sources.get(category, "#")
 
+    # Handle nested sources (e.g., ΑΣΤΥΝΟΜΙΚΟ ΠΡΟΣΩΠΙΚΟ category)
+    if isinstance(source, dict) and subcategory:
+        source = source.get(subcategory, "#")
+
     # Handle local PDF files
-    if source and source.startswith("/"):
+    if source and isinstance(source, str) and source.startswith("/"):
         pdf_path = source[1:]  # Remove leading slash
         if os.path.exists(pdf_path):
             return (pdf_path, True)  # Return path and flag indicating it's a local file
     return (source, False)  # Return URL and flag indicating it's an external link
+
+def display_pdf_download(source_path: str) -> None:
+    """Display PDF download button"""
+    st.markdown("### 📄 Πλήρες Κείμενο Νόμου")
+    try:
+        with open(source_path, "rb") as pdf_file:
+            PDFbyte = pdf_file.read()
+        st.download_button(
+            label="Κατέβασμα PDF",
+            data=PDFbyte,
+            file_name=os.path.basename(source_path),
+            mime='application/pdf'
+        )
+    except Exception as e:
+        logger.error(f"Error reading PDF {source_path}: {str(e)}")
+        st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
 
 # Set page config
 st.set_page_config(
@@ -246,34 +266,24 @@ def main():
 
                 # Display category content
                 if selected_category in st.session_state.cached_categories:
-                    # Add source link at the category level
-                    source_path, is_local = get_source_url(selected_category)
-
-                    if source_path != "#":
-                        if is_local:
-                            st.markdown("### 📄 Πλήρες Κείμενο Νόμου")
-                            if os.path.exists(source_path):
-                                with open(source_path, "rb") as pdf_file:
-                                    PDFbyte = pdf_file.read()
-                                st.download_button(
-                                    label="Κατέβασμα PDF",
-                                    data=PDFbyte,
-                                    file_name=os.path.basename(source_path),
-                                    mime='application/pdf'
-                                )
-                            else:
-                                st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
-                        else:
-                            st.markdown(f"""
-                            <div style="text-align: right; margin-bottom: 20px;">
-                                <a href="{source_path}" target="_blank" style="color: #1f4e79;">
-                                    📄 Πλήρες Κείμενο Νόμου
-                                </a>
-                            </div>
-                            """, unsafe_allow_html=True)
-
                     for subcategory, articles in st.session_state.cached_categories[selected_category].items():
                         with st.expander(f"📚 {subcategory}", expanded=True):
+                            # Get source for category/subcategory combination
+                            source_path, is_local = get_source_url(selected_category, subcategory)
+
+                            if source_path != "#":
+                                if is_local:
+                                    display_pdf_download(source_path)
+                                else:
+                                    st.markdown(f"""
+                                    <div style="text-align: right; margin-bottom: 20px;">
+                                        <a href="{source_path}" target="_blank" style="color: #1f4e79;">
+                                            📄 Πλήρες Κείμενο Νόμου
+                                        </a>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+
+                            # Display articles
                             for article in articles:
                                 st.markdown(f"""
                                 <div class="law-article">

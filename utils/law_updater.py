@@ -8,14 +8,23 @@ class LawUpdater:
     def __init__(self, data_path: str = "data/law_database.json"):
         self.data_path = data_path
         self.sources = {
-            "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/poinikos-kodikas",
-            "ΝΑΡΚΩΤΙΚΑ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/n-4139-2013",
-            "ΟΠΛΑ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/n-2168-1993",
-            "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/n-3500-2006",
-            "ΠΔ 141/1991": "https://www.kodiko.gr/nomothesia/document/619227",
+            "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "/attached_assets/ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ ενημερωμένος με Ν 5108_2024 loninja watermark.pdf",
+            "ΝΑΡΚΩΤΙΚΑ": "/attached_assets/νομος περι ναρκωτικων.pdf",
+            "ΟΠΛΑ": "/attached_assets/Ν.-2168.1993-ΠΕΡΙ-ΟΠΛΩΝ-ΕΠΙΚΑΙΡΟΠΟΙΗΜΕΝΟΣ.pdf",
+            "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ": "/attached_assets/νομος ενδοοικογενειακης βιας.pdf",
             "ΝΟΜΙΜΕΣ ΔΙΑΔΙΚΑΣΙΕΣ - 141/1991": "/attached_assets/ΠΔ 141 1991 ΑΡΜΟΔΙΟΤΗΤΕΣ ΚΑΙ ΕΝΕΡΓΕΙΕΣ ΕΛΑΣ.pdf",
-            "ΚΟΚ-ΤΡΟΧΟΝΟΜΙΚΑ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/kodikas-odikis-kykloforias-kok",
-            "ΝΟΜΟΣ ΠΕΡΙ ΚΑΤΟΙΚΙΔΙΩΝ": "https://www.lawspot.gr/nomikes-plirofories/nomothesia/n-4830-2021"
+            "ΚΟΚ-ΤΡΟΧΟΝΟΜΙΚΑ": "/attached_assets/neoskok.pdf",
+            "ΝΟΜΟΣ ΠΕΡΙ ΚΑΤΟΙΚΙΔΙΩΝ": "/attached_assets/ΦΕΚ κατοικιδια.pdf",
+            "ΑΣΤΥΝΟΜΙΚΟ ΠΡΟΣΩΠΙΚΟ": {
+                "Άδειες": "/attached_assets/adeies astynomikoy prosopikoy.pdf",
+                "Μεταθέσεις": "/attached_assets/metaueseis astynomikoy prosopikoy.pdf",
+                "Κώδικας Δεοντολογίας": "/attached_assets/kodikas deontologias.pdf",
+                "Χρήση Οπλισμού": "/attached_assets/nomos peri xrhshs oplismoy.pdf",
+                "Πειθαρχικό Δίκαιο": "/attached_assets/peitharxiko dikaio astynomikon.pdf",
+                "Χρόνος Εργασίας": "/attached_assets/xronos ergasias astynomikon.pdf",
+                "Παροχές και Αποζημιώσεις": "/attached_assets/Παροχές προς προσωπικό τραυματισμοί εν υπηρεσία κτλ.pdf"
+            },
+            "ΗΛΕΚΤΡΟΝΙΚΟ ΕΓΚΛΗΜΑ": "/attached_assets/ΗΛΕΚΤΡΟΝΙΚΟ_ΕΓΚΛΗΜΑ.pdf"
         }
         self.last_update = self._load_last_update()
 
