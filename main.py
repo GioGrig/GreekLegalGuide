@@ -10,10 +10,34 @@ import logging
 import tempfile
 import os
 from pathlib import Path
+import base64
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def get_binary_file_downloader_html(bin_file_path, file_label='File'):
+    """Generate a download link for binary files"""
+    try:
+        with open(bin_file_path, 'rb') as f:
+            data = f.read()
+        b64 = base64.b64encode(data).decode()
+        return f'<a href="data:application/pdf;base64,{b64}" download="{os.path.basename(bin_file_path)}">{file_label}</a>'
+    except Exception as e:
+        logger.error(f"Error creating download link for {bin_file_path}: {str(e)}")
+        return None
+
+def get_source_url(category: str) -> tuple:
+    """Get the official source URL or PDF path for a given category"""
+    law_updater = LawUpdater()
+    source = law_updater.sources.get(category, "#")
+
+    # Handle local PDF files
+    if source and source.startswith("/"):
+        pdf_path = source[1:]  # Remove leading slash
+        if os.path.exists(pdf_path):
+            return (pdf_path, True)  # Return path and flag indicating it's a local file
+    return (source, False)  # Return URL and flag indicating it's an external link
 
 # Set page config
 st.set_page_config(
@@ -233,15 +257,23 @@ def main():
                 # Display category content
                 if selected_category in st.session_state.cached_categories:
                     # Add source link at the category level
-                    source_url = get_source_url(selected_category)
-                    if source_url != "#":
-                        st.markdown(f"""
-                        <div style="text-align: right; margin-bottom: 20px;">
-                            <a href="{source_url}" target="_blank" style="color: #1f4e79;">
-                                📄 Πλήρες Κείμενο Νόμου
-                            </a>
-                        </div>
-                        """, unsafe_allow_html=True)
+                    source_path, is_local = get_source_url(selected_category)
+
+                    if source_path != "#":
+                        if is_local:
+                            download_link = get_binary_file_downloader_html(source_path, '📄 Κατέβασμα Πλήρους Κειμένου Νόμου (PDF)')
+                            if download_link:
+                                st.markdown(download_link, unsafe_allow_html=True)
+                            else:
+                                st.error("Το αρχείο PDF δεν είναι προσωρινά διαθέσιμο.")
+                        else:
+                            st.markdown(f"""
+                            <div style="text-align: right; margin-bottom: 20px;">
+                                <a href="{source_path}" target="_blank" style="color: #1f4e79;">
+                                    📄 Πλήρες Κείμενο Νόμου
+                                </a>
+                            </div>
+                            """, unsafe_allow_html=True)
 
                     for subcategory, articles in st.session_state.cached_categories[selected_category].items():
                         with st.expander(f"📚 {subcategory}", expanded=True):
