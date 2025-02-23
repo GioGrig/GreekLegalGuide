@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.pdf_processor import process_pdf
+from utils.pdf_processor import process_pdf, process_pdf_to_articles
 from utils.search import search_content
 from utils.law_updater import LawUpdater, update_categories_from_database
 from data.categories import CATEGORIES
@@ -14,93 +14,94 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS
-with open('assets/styles.css') as f:
-    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+# Custom CSS for better readability of full articles
+st.markdown("""
+<style>
+    .law-article {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
+    .article-title {
+        color: #1f4e79;
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+    .article-content {
+        font-size: 1em;
+        line-height: 1.6;
+        margin: 15px 0;
+    }
+    .article-penalty {
+        color: #721c24;
+        background-color: #f8d7da;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 def main():
     # Add a welcome message with user instructions
     st.title("🏛️ Νομικός Βοηθός για Αστυνομικούς")
     st.markdown("""
     ### Καλώς ήρθατε στον Νομικό Βοηθό!
-    Αυτή η εφαρμογή σας βοηθά να:
-    - 📚 Αναζητήσετε νομικές διατάξεις
-    - 📋 Δείτε πρόσφατες ενημερώσεις
-    - 🔍 Βρείτε πληροφορίες για συγκεκριμένα άρθρα
+    Αυτή η εφαρμογή παρέχει πρόσβαση στο πλήρες περιεχόμενο των νομικών διατάξεων και άρθρων.
+
+    - 📚 Αναζητήστε νομικές διατάξεις
+    - 📋 Δείτε το πλήρες κείμενο κάθε άρθρου
+    - 🔍 Εξερευνήστε όλες τις λεπτομέρειες των νόμων
     """)
 
-    # Add a simple counter in the sidebar to demonstrate interactivity
-    st.sidebar.title("Διαχείριση")
-    if 'counter' not in st.session_state:
-        st.session_state.counter = 0
-
-    st.sidebar.subheader("Δοκιμαστικό Κουμπί")
-    if st.sidebar.button("Πατήστε με! 🖱️"):
-        st.session_state.counter += 1
-    st.sidebar.write(f"Πατήσατε το κουμπί {st.session_state.counter} φορές")
-
-    # Update button in sidebar
-    if st.sidebar.button("🔄 Ενημέρωση Νομικής Βάσης"):
-        with st.spinner("Έλεγχος για ενημερώσεις..."):
-            updater = LawUpdater()
-            if updater.update_laws():
-                st.sidebar.success("Η βάση δεδομένων ενημερώθηκε επιτυχώς!")
-            else:
-                st.sidebar.info("Δεν βρέθηκαν νέες ενημερώσεις.")
-
-    # Show last update time
-    try:
-        with open("data/law_database.json", 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            last_update = data.get('last_update', {})
-            if last_update:
-                last_update_time = max(datetime.fromisoformat(date) for date in last_update.values())
-                st.sidebar.text(f"Τελευταία ενημέρωση:\n{last_update_time.strftime('%d/%m/%Y %H:%M')}")
-    except (FileNotFoundError, json.JSONDecodeError, ValueError):
-        pass
-
-    # Sidebar for main navigation
-    st.sidebar.title("Κατηγορίες")
+    # Sidebar navigation
+    st.sidebar.title("Πλοήγηση")
     category = st.sidebar.selectbox(
         "Επιλέξτε Κατηγορία:",
         list(CATEGORIES.keys())
     )
 
-    # Search functionality with placeholder text
-    search_query = st.text_input("🔍 Αναζήτηση νομικών διατάξεων...", 
-                                placeholder="π.χ. κατοικίδια, ποινές, πρόστιμα...")
+    # Search functionality with improved placeholder
+    search_query = st.text_input(
+        "🔍 Αναζήτηση νομικών διατάξεων...",
+        placeholder="π.χ. κατοικίδια, ποινές, πρόστιμα, άδειες..."
+    )
 
-    # Main content area with category description
+    # Main content area
     st.header(f"📖 {category}")
 
-    # Display subcategories and articles
+    # Display full content of subcategories and articles
     if category in CATEGORIES:
         for subcategory, articles in CATEGORIES[category].items():
-            with st.expander(f"📚 {subcategory}"):
+            with st.expander(f"📚 {subcategory}", expanded=True):
                 for article in articles:
                     st.markdown(f"""
-                    ### {article['title']}
-                    **Νόμος:** {article['law']}
+                    <div class="law-article">
+                        <div class="article-title">{article['title']}</div>
+                        <strong>Νόμος:</strong> {article['law']}
+                        <div class="article-content">{article['content']}</div>
+                        <div class="article-penalty">
+                            <strong>Ποινή:</strong> {article['penalty']}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                    {article['content']}
-
-                    **Ποινή:** {article['penalty']}
-                    ---
-                    """)
-
-    # Search results with improved formatting
+    # Enhanced search results
     if search_query:
         results = search_content(search_query, CATEGORIES)
         if results:
             st.subheader("🔍 Αποτελέσματα Αναζήτησης")
             for result in results:
-                with st.expander(f"📑 {result['title']}"):
+                with st.expander(f"📑 {result['title']}", expanded=True):
                     st.markdown(f"""
-                    **Κατηγορία:** {result['category']}
-                    **Υποκατηγορία:** {result['subcategory']}
-
-                    {result['content']}
-                    """)
+                    <div class="law-article">
+                        <strong>Κατηγορία:</strong> {result['category']}
+                        <br>
+                        <strong>Υποκατηγορία:</strong> {result['subcategory']}
+                        <div class="article-content">{result['content']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
         else:
             st.info("Δεν βρέθηκαν αποτελέσματα για την αναζήτησή σας.")
 

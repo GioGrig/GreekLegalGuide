@@ -1,5 +1,6 @@
 import PyPDF2
 import re
+from typing import List, Dict
 
 def process_pdf(file_path):
     """
@@ -38,22 +39,59 @@ def clean_text(text):
 
     return text.strip()
 
-def extract_law_sections(text):
+def extract_law_sections(text) -> List[Dict[str, str]]:
     """
-    Extract law sections from the processed text
+    Extract law sections from the processed text with improved article detection
+    Returns a list of dictionaries containing article information
     """
-    sections = []
-    current_section = ""
+    articles = []
+    current_article = {"title": "", "content": "", "law": "", "penalty": ""}
 
-    for line in text.split('\n'):
-        if line.strip().startswith('Άρθρο'):
-            if current_section:
-                sections.append(current_section)
-            current_section = line
+    lines = text.split('\n')
+    for i, line in enumerate(lines):
+        line = line.strip()
+
+        # Detect article starts
+        if line.startswith('Άρθρο') or line.startswith('ΑΡΘΡΟ'):
+            if current_article["content"]:  # Save previous article if exists
+                articles.append(current_article.copy())
+
+            # Start new article
+            current_article = {
+                "title": line,
+                "content": line + "\n",
+                "law": "",  # Will be set based on context
+                "penalty": ""  # Will be extracted from content if available
+            }
+
+        # Detect law reference
+        elif "Ν." in line or "Π.Δ." in line:
+            current_article["law"] = line
+
+        # Detect penalties (common penalty-related phrases in Greek)
+        elif any(phrase in line.lower() for phrase in ["ποινή", "κύρωση", "πρόστιμο", "φυλάκιση"]):
+            current_article["penalty"] = line
+
+        # Add line to current article's content
         else:
-            current_section += '\n' + line
+            current_article["content"] += line + "\n"
 
-    if current_section:
-        sections.append(current_section)
+    # Add the last article
+    if current_article["content"]:
+        articles.append(current_article)
 
-    return sections
+    return articles
+
+def process_pdf_to_articles(file_path, law_category) -> List[Dict[str, str]]:
+    """
+    Process a PDF file and return structured articles with full content
+    """
+    text = process_pdf(file_path)
+    if text:
+        articles = extract_law_sections(text)
+        # Add category information to each article
+        for article in articles:
+            if not article["law"]:
+                article["law"] = law_category
+        return articles
+    return []
