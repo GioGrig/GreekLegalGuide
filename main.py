@@ -64,11 +64,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state for caching
+# Initialize session state for caching and navigation
 if 'cache_timestamp' not in st.session_state:
     st.session_state.cache_timestamp = datetime.now()
 if 'cached_categories' not in st.session_state:
     st.session_state.cached_categories = CATEGORIES
+if 'show_home' not in st.session_state:
+    st.session_state.show_home = True
 
 def get_app_version():
     """Get current version of the law database"""
@@ -88,6 +90,7 @@ def show_help():
     ### 📖 Οδηγίες Χρήσης
 
     1. **Πλοήγηση**
+       - Χρησιμοποιήστε το κουμπί 🏠 Αρχική για να επιστρέψετε στην αρχική σελίδα
        - Χρησιμοποιήστε το μενού στα αριστερά για να επιλέξετε κατηγορία
        - Κάθε κατηγορία περιέχει υποκατηγορίες με σχετικά άρθρα
 
@@ -104,6 +107,34 @@ def show_help():
        - Οι ποινές εμφανίζονται με κόκκινο φόντο
     """)
 
+def show_welcome():
+    """Display welcome message and overview"""
+    st.markdown("""
+    ### 👋 Καλώς ήρθατε στον Νομικό Βοηθό!
+
+    Αυτή η εφαρμογή είναι ένα ολοκληρωμένο εργαλείο για την εύκολη πρόσβαση στο νομικό πλαίσιο της Ελλάδας.
+
+    #### 🎯 Κύρια Χαρακτηριστικά:
+
+    - 📚 **Πλήρης Νομική Βιβλιοθήκη**
+      - Ποινικός Κώδικας
+      - Νόμοι περί Κατοικιδίων
+      - Αστυνομική Νομοθεσία
+      - Και πολλά άλλα...
+
+    - 🔍 **Εύκολη Αναζήτηση**
+      - Αναζητήστε με λέξεις-κλειδιά
+      - Άμεσα αποτελέσματα
+
+    - 📱 **Προσβάσιμο Παντού**
+      - Λειτουργεί σε όλες τις συσκευές
+      - Πάντα ενημερωμένο
+
+    #### 🚀 Ξεκινήστε:
+    1. Επιλέξτε μια κατηγορία από το μενού στα αριστερά
+    2. Ή χρησιμοποιήστε την αναζήτηση για συγκεκριμένα θέματα
+    """)
+
 def main():
     # Display version badge
     version_date = get_app_version()
@@ -113,75 +144,84 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Main title and welcome message
+    # Main title
     st.title("🏛️ Νομικός Βοηθός για Αστυνομικούς")
-    st.markdown("""
-    ### Καλώς ήρθατε στον Νομικό Βοηθό!
-    Αυτή η εφαρμογή παρέχει πρόσβαση στο πλήρες περιεχόμενο των νομικών διατάξεων και άρθρων.
-    """)
 
-    # Help button in sidebar
+    # Sidebar navigation
     st.sidebar.title("Πλοήγηση")
+
+    # Home button
+    if st.sidebar.button("🏠 Αρχική"):
+        st.session_state.show_home = True
+
+    # Help button
     if st.sidebar.button("ℹ️ Βοήθεια"):
         show_help()
+        st.session_state.show_home = False
 
     # Category selection with error handling
     try:
-        category = st.sidebar.selectbox(
+        selected_category = st.sidebar.selectbox(
             "Επιλέξτε Κατηγορία:",
             list(st.session_state.cached_categories.keys())
         )
+        if selected_category:
+            st.session_state.show_home = False
     except Exception as e:
         st.error("Σφάλμα στη φόρτωση κατηγοριών. Παρακαλώ ανανεώστε τη σελίδα.")
         st.stop()
 
-    # Search with loading state
-    search_query = st.text_input(
-        "🔍 Αναζήτηση νομικών διατάξεων...",
-        placeholder="π.χ. κατοικίδια, ποινές, πρόστιμα, άδειες..."
-    )
+    # Show welcome page or category content
+    if st.session_state.show_home:
+        show_welcome()
+    else:
+        try:
+            # Search with loading state
+            search_query = st.text_input(
+                "🔍 Αναζήτηση νομικών διατάξεων...",
+                placeholder="π.χ. κατοικίδια, ποινές, πρόστιμα, άδειες..."
+            )
 
-    # Main content area with error handling
-    try:
-        st.header(f"📖 {category}")
+            st.header(f"📖 {selected_category}")
 
-        if category in st.session_state.cached_categories:
-            for subcategory, articles in st.session_state.cached_categories[category].items():
-                with st.expander(f"📚 {subcategory}", expanded=True):
-                    for article in articles:
-                        st.markdown(f"""
-                        <div class="law-article">
-                            <div class="article-title">{article['title']}</div>
-                            <strong>Νόμος:</strong> {article['law']}
-                            <div class="article-content">{article['content']}</div>
-                            <div class="article-penalty">
-                                <strong>Ποινή:</strong> {article['penalty']}
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-
-        # Search results with loading state
-        if search_query:
-            with st.spinner("Αναζήτηση..."):
-                results = search_content(search_query, st.session_state.cached_categories)
-                if results:
-                    st.subheader("🔍 Αποτελέσματα Αναζήτησης")
-                    for result in results:
-                        with st.expander(f"📑 {result['title']}", expanded=True):
+            # Display category content
+            if selected_category in st.session_state.cached_categories:
+                for subcategory, articles in st.session_state.cached_categories[selected_category].items():
+                    with st.expander(f"📚 {subcategory}", expanded=True):
+                        for article in articles:
                             st.markdown(f"""
                             <div class="law-article">
-                                <strong>Κατηγορία:</strong> {result['category']}
-                                <br>
-                                <strong>Υποκατηγορία:</strong> {result['subcategory']}
-                                <div class="article-content">{result['content']}</div>
+                                <div class="article-title">{article['title']}</div>
+                                <strong>Νόμος:</strong> {article['law']}
+                                <div class="article-content">{article['content']}</div>
+                                <div class="article-penalty">
+                                    <strong>Ποινή:</strong> {article['penalty']}
+                                </div>
                             </div>
                             """, unsafe_allow_html=True)
-                else:
-                    st.info("Δεν βρέθηκαν αποτελέσματα για την αναζήτησή σας.")
 
-    except Exception as e:
-        st.error("Παρουσιάστηκε σφάλμα κατά την προβολή του περιεχομένου. Παρακαλώ δοκιμάστε ξανά.")
-        st.exception(e)
+            # Search results with loading state
+            if search_query:
+                with st.spinner("Αναζήτηση..."):
+                    results = search_content(search_query, st.session_state.cached_categories)
+                    if results:
+                        st.subheader("🔍 Αποτελέσματα Αναζήτησης")
+                        for result in results:
+                            with st.expander(f"📑 {result['title']}", expanded=True):
+                                st.markdown(f"""
+                                <div class="law-article">
+                                    <strong>Κατηγορία:</strong> {result['category']}
+                                    <br>
+                                    <strong>Υποκατηγορία:</strong> {result['subcategory']}
+                                    <div class="article-content">{result['content']}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                    else:
+                        st.info("Δεν βρέθηκαν αποτελέσματα για την αναζήτησή σας.")
+
+        except Exception as e:
+            st.error("Παρουσιάστηκε σφάλμα κατά την προβολή του περιεχομένου. Παρακαλώ δοκιμάστε ξανά.")
+            st.exception(e)
 
     # Footer with version info
     st.markdown("---")
