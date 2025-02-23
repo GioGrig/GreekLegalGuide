@@ -41,6 +41,13 @@ st.markdown("""
         border-radius: 4px;
         margin-top: 10px;
     }
+    .welcome-quote {
+        background-color: #f8f9fa;
+        border-left: 5px solid #1f4e79;
+        padding: 20px;
+        margin: 20px 0;
+        font-style: italic;
+    }
     /* Mobile responsiveness */
     @media (max-width: 768px) {
         .law-article {
@@ -64,25 +71,35 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state for caching and navigation
-if 'cache_timestamp' not in st.session_state:
-    st.session_state.cache_timestamp = datetime.now()
-if 'cached_categories' not in st.session_state:
-    st.session_state.cached_categories = CATEGORIES
-if 'show_home' not in st.session_state:
-    st.session_state.show_home = True
+def show_welcome():
+    """Display welcome message and overview"""
+    st.markdown("""
+    <div class="welcome-quote">
+    Αυτή η διαδικτυακή εφαρμογή δημιουργήθηκε με τη βοήθεια τεχνητής νοημοσύνης από μάχιμους αστυνομικούς για μάχιμους αστυνομικούς. Είθε η χρήση της τεχνολογίας να μας βοηθήσει στην εκπλήρωση του δύσκολου και πολλές φορές επικίνδυνου έργο μας, παρέχοντας τις καλύτερες δυνατές υπηρεσίες προς τον πολίτη όπως έχουμε ορκιστεί. Καλές υπηρεσίες, να προσέχετε ο ένας τον άλλον, και πάντα το σχόλασμα να σας βρίσκει γέρους και με τις οικογένειές σας.
+    </div>
 
-def get_app_version():
-    """Get current version of the law database"""
-    try:
-        with open("data/law_database.json", 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            last_update = data.get('last_update', {})
-            if last_update:
-                return max(datetime.fromisoformat(date) for date in last_update.values())
-    except (FileNotFoundError, json.JSONDecodeError, ValueError):
-        return datetime.now()
-    return datetime.now()
+    ---
+
+    #### 🎯 Κύρια Χαρακτηριστικά:
+
+    - 📚 **Πλήρης Νομική Βιβλιοθήκη**
+      - Ποινικός Κώδικας
+      - Νόμοι περί Κατοικιδίων
+      - Αστυνομική Νομοθεσία
+      - Και πολλά άλλα...
+
+    - 🔍 **Εύκολη Αναζήτηση**
+      - Αναζητήστε με λέξεις-κλειδιά
+      - Άμεσα αποτελέσματα
+
+    - 📱 **Προσβάσιμο Παντού**
+      - Λειτουργεί σε όλες τις συσκευές
+      - Πάντα ενημερωμένο
+
+    #### 🚀 Ξεκινήστε:
+    1. Επιλέξτε μια κατηγορία από το μενού στα αριστερά
+    2. Ή χρησιμοποιήστε την αναζήτηση για συγκεκριμένα θέματα
+    """, unsafe_allow_html=True)
 
 def show_help():
     """Display help and documentation"""
@@ -107,39 +124,15 @@ def show_help():
        - Οι ποινές εμφανίζονται με κόκκινο φόντο
     """)
 
-def show_welcome():
-    """Display welcome message and overview"""
-    st.markdown("""
-    ### 👋 Καλώς ήρθατε στον Νομικό Βοηθό!
-
-    > *Αυτή η διαδικτυακή εφαρμογή δημιουργήθηκε με τη βοήθεια τεχνητής νοημοσύνης από μάχιμους αστυνομικούς για μάχιμους αστυνομικούς. Είθε η χρήση της τεχνολογίας να μας βοηθήσει στην εκπλήρωση του δύσκολου και πολλές φορές επικίνδυνου έργο μας, παρέχοντας τις καλύτερες δυνατές υπηρεσίες προς τον πολίτη όπως έχουμε ορκιστεί. Καλές υπηρεσίες, να προσέχετε ο ένας τον άλλον, και πάντα το σχόλασμα να σας βρίσκει γέρους και με τις οικογένειές σας.*
-
-    ---
-
-    #### 🎯 Κύρια Χαρακτηριστικά:
-
-    - 📚 **Πλήρης Νομική Βιβλιοθήκη**
-      - Ποινικός Κώδικας
-      - Νόμοι περί Κατοικιδίων
-      - Αστυνομική Νομοθεσία
-      - Και πολλά άλλα...
-
-    - 🔍 **Εύκολη Αναζήτηση**
-      - Αναζητήστε με λέξεις-κλειδιά
-      - Άμεσα αποτελέσματα
-
-    - 📱 **Προσβάσιμο Παντού**
-      - Λειτουργεί σε όλες τις συσκευές
-      - Πάντα ενημερωμένο
-
-    #### 🚀 Ξεκινήστε:
-    1. Επιλέξτε μια κατηγορία από το μενού στα αριστερά
-    2. Ή χρησιμοποιήστε την αναζήτηση για συγκεκριμένα θέματα
-    """)
-
 def main():
+    # Initialize session state
+    if 'show_home' not in st.session_state:
+        st.session_state.show_home = True
+    if 'cached_categories' not in st.session_state:
+        st.session_state.cached_categories = CATEGORIES
+
     # Display version badge
-    version_date = get_app_version()
+    version_date = datetime.now()
     st.markdown(f"""
     <div style="text-align: right;">
         <span class="version-badge">v.{version_date.strftime('%Y.%m.%d')}</span>
@@ -155,25 +148,22 @@ def main():
     # Home button
     if st.sidebar.button("🏠 Αρχική"):
         st.session_state.show_home = True
+        st.experimental_rerun()
 
     # Help button
     if st.sidebar.button("ℹ️ Βοήθεια"):
+        st.session_state.show_home = False
         show_help()
+
+    # Category selection
+    selected_category = st.sidebar.selectbox(
+        "Επιλέξτε Κατηγορία:",
+        list(st.session_state.cached_categories.keys())
+    )
+    if selected_category:
         st.session_state.show_home = False
 
-    # Category selection with error handling
-    try:
-        selected_category = st.sidebar.selectbox(
-            "Επιλέξτε Κατηγορία:",
-            list(st.session_state.cached_categories.keys())
-        )
-        if selected_category:
-            st.session_state.show_home = False
-    except Exception as e:
-        st.error("Σφάλμα στη φόρτωση κατηγοριών. Παρακαλώ ανανεώστε τη σελίδα.")
-        st.stop()
-
-    # Show welcome page or category content
+    # Show either welcome page or content
     if st.session_state.show_home:
         show_welcome()
     else:
@@ -184,25 +174,26 @@ def main():
                 placeholder="π.χ. κατοικίδια, ποινές, πρόστιμα..."
             )
 
-            st.header(f"📖 {selected_category}")
+            if not st.session_state.show_home:
+                st.header(f"📖 {selected_category}")
 
-            # Display category content
-            if selected_category in st.session_state.cached_categories:
-                for subcategory, articles in st.session_state.cached_categories[selected_category].items():
-                    with st.expander(f"📚 {subcategory}", expanded=True):
-                        for article in articles:
-                            st.markdown(f"""
-                            <div class="law-article">
-                                <div class="article-title">{article['title']}</div>
-                                <strong>Νόμος:</strong> {article['law']}
-                                <div class="article-content">{article['content']}</div>
-                                <div class="article-penalty">
-                                    <strong>Ποινή:</strong> {article['penalty']}
+                # Display category content
+                if selected_category in st.session_state.cached_categories:
+                    for subcategory, articles in st.session_state.cached_categories[selected_category].items():
+                        with st.expander(f"📚 {subcategory}", expanded=True):
+                            for article in articles:
+                                st.markdown(f"""
+                                <div class="law-article">
+                                    <div class="article-title">{article['title']}</div>
+                                    <strong>Νόμος:</strong> {article['law']}
+                                    <div class="article-content">{article['content']}</div>
+                                    <div class="article-penalty">
+                                        <strong>Ποινή:</strong> {article['penalty']}
+                                    </div>
                                 </div>
-                            </div>
-                            """, unsafe_allow_html=True)
+                                """, unsafe_allow_html=True)
 
-            # Search results with loading state
+            # Search results
             if search_query:
                 with st.spinner("Αναζήτηση..."):
                     results = search_content(search_query, st.session_state.cached_categories)
@@ -225,7 +216,7 @@ def main():
             st.error("Παρουσιάστηκε σφάλμα κατά την προβολή του περιεχομένου. Παρακαλώ δοκιμάστε ξανά.")
             st.exception(e)
 
-    # Footer with version info
+    # Footer
     st.markdown("---")
     st.markdown(f"""
     <div style="text-align: center; color: #666;">
