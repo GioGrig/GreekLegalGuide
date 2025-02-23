@@ -6,6 +6,11 @@ from utils.law_updater import LawUpdater, update_categories_from_database
 from data.categories import CATEGORIES
 import json
 from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Set page config
 st.set_page_config(
@@ -50,6 +55,12 @@ st.markdown("""
         font-size: 0.9em;
         line-height: 1.5;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .feedback-box {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
     }
     /* Mobile responsiveness */
     @media (max-width: 768px) {
@@ -102,43 +113,43 @@ def show_help():
     """)
 
 def main():
-    # Initialize session state
-    if 'cached_categories' not in st.session_state:
-        st.session_state.cached_categories = CATEGORIES
-
-    # Display version badge
-    version_date = datetime.now()
-    st.markdown(f"""
-    <div style="text-align: right;">
-        <span class="version-badge">v.{version_date.strftime('%Y.%m.%d')}</span>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Main title
-    st.title("🏛️ Νομικός Βοηθός για Αστυνομικούς")
-
-    # Sidebar navigation
-    st.sidebar.title("Πλοήγηση")
-
-    # Help button
-    if st.sidebar.button("ℹ️ Βοήθεια"):
-        st.session_state.show_help = True
-        show_help()
-
-    # Category selection
-    selected_category = st.sidebar.selectbox(
-        "Επιλέξτε Κατηγορία:",
-        list(st.session_state.cached_categories.keys())
-    )
-
-    # Welcome message in sidebar (permanent fixture) - moved below categories
-    st.sidebar.markdown("""
-    <div class="sidebar-welcome">
-    Αυτή η διαδικτυακή εφαρμογή δημιουργήθηκε με τη βοήθεια τεχνητής νοημοσύνης από μάχιμους αστυνομικούς για μάχιμους αστυνομικούς. Είθε η χρήση της τεχνολογίας να μας βοηθήσει στην εκπλήρωση του δύσκολου και πολλές φορές επικίνδυνου έργο μας, παρέχοντας τις καλύτερες δυνατές υπηρεσίες προς τον πολίτη όπως έχουμε ορκιστεί. Καλές υπηρεσίες, να προσέχετε ο ένας τον άλλον, και πάντα το σχόλασμα να σας βρίσκει γέρους και με τις οικογένειές σας.
-    </div>
-    """, unsafe_allow_html=True)
-
     try:
+        # Initialize session state
+        if 'cached_categories' not in st.session_state:
+            st.session_state.cached_categories = CATEGORIES
+
+        # Display version badge
+        version_date = datetime.now()
+        st.markdown(f"""
+        <div style="text-align: right;">
+            <span class="version-badge">v.{version_date.strftime('%Y.%m.%d')}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Main title
+        st.title("🏛️ Νομικός Βοηθός για Αστυνομικούς")
+
+        # Sidebar navigation
+        st.sidebar.title("Πλοήγηση")
+
+        # Help button
+        if st.sidebar.button("ℹ️ Βοήθεια"):
+            st.session_state.show_help = True
+            show_help()
+
+        # Category selection
+        selected_category = st.sidebar.selectbox(
+            "Επιλέξτε Κατηγορία:",
+            list(st.session_state.cached_categories.keys())
+        )
+
+        # Welcome message in sidebar (permanent fixture) - moved below categories
+        st.sidebar.markdown("""
+        <div class="sidebar-welcome">
+        Αυτή η διαδικτυακή εφαρμογή δημιουργήθηκε με τη βοήθεια τεχνητής νοημοσύνης από μάχιμους αστυνομικούς για μάχιμους αστυνομικούς. Είθε η χρήση της τεχνολογίας να μας βοηθήσει στην εκπλήρωση του δύσκολου και πολλές φορές επικίνδυνου έργο μας, παρέχοντας τις καλύτερες δυνατές υπηρεσίες προς τον πολίτη όπως έχουμε ορκιστεί. Καλές υπηρεσίες, να προσέχετε ο ένας τον άλλον, και πάντα το σχόλασμα να σας βρίσκει γέρους και με τις οικογένειές σας.
+        </div>
+        """, unsafe_allow_html=True)
+
         # Search with loading state
         search_query = st.text_input(
             "🔍 Αναζήτηση νομικών διατάξεων...",
@@ -146,54 +157,69 @@ def main():
         )
 
         if selected_category:
-            st.header(f"📖 {selected_category}")
+            with st.spinner("Φόρτωση περιεχομένου..."):
+                st.header(f"📖 {selected_category}")
 
-            # Display category content
-            if selected_category in st.session_state.cached_categories:
-                for subcategory, articles in st.session_state.cached_categories[selected_category].items():
-                    with st.expander(f"📚 {subcategory}", expanded=True):
-                        for article in articles:
-                            st.markdown(f"""
-                            <div class="law-article">
-                                <div class="article-title">{article['title']}</div>
-                                <strong>Νόμος:</strong> {article['law']}
-                                <div class="article-content">{article['content']}</div>
-                                <div class="article-penalty">
-                                    <strong>Ποινή:</strong> {article['penalty']}
+                # Display category content
+                if selected_category in st.session_state.cached_categories:
+                    for subcategory, articles in st.session_state.cached_categories[selected_category].items():
+                        with st.expander(f"📚 {subcategory}", expanded=True):
+                            for article in articles:
+                                st.markdown(f"""
+                                <div class="law-article">
+                                    <div class="article-title">{article['title']}</div>
+                                    <strong>Νόμος:</strong> {article['law']}
+                                    <div class="article-content">{article['content']}</div>
+                                    <div class="article-penalty">
+                                        <strong>Ποινή:</strong> {article['penalty']}
+                                    </div>
                                 </div>
-                            </div>
-                            """, unsafe_allow_html=True)
+                                """, unsafe_allow_html=True)
 
         # Search results
         if search_query:
             with st.spinner("Αναζήτηση..."):
-                results = search_content(search_query, st.session_state.cached_categories)
-                if results:
-                    st.subheader("🔍 Αποτελέσματα Αναζήτησης")
-                    for result in results:
-                        with st.expander(f"📑 {result['title']}", expanded=True):
-                            st.markdown(f"""
-                            <div class="law-article">
-                                <strong>Κατηγορία:</strong> {result['category']}
-                                <br>
-                                <strong>Υποκατηγορία:</strong> {result['subcategory']}
-                                <div class="article-content">{result['content']}</div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                else:
-                    st.info("Δεν βρέθηκαν αποτελέσματα για την αναζήτησή σας.")
+                try:
+                    results = search_content(search_query, st.session_state.cached_categories)
+                    if results:
+                        st.subheader("🔍 Αποτελέσματα Αναζήτησης")
+                        for result in results:
+                            with st.expander(f"📑 {result['title']}", expanded=True):
+                                st.markdown(f"""
+                                <div class="law-article">
+                                    <strong>Κατηγορία:</strong> {result['category']}
+                                    <br>
+                                    <strong>Υποκατηγορία:</strong> {result['subcategory']}
+                                    <div class="article-content">{result['content']}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                    else:
+                        st.info("Δεν βρέθηκαν αποτελέσματα για την αναζήτησή σας.")
+                except Exception as e:
+                    logger.error(f"Search error: {str(e)}")
+                    st.error("Παρουσιάστηκε σφάλμα κατά την αναζήτηση. Παρακαλώ δοκιμάστε ξανά.")
+
+        # Feedback section
+        st.markdown("---")
+        with st.expander("📝 Αναφορά Προβλήματος"):
+            st.markdown("""
+            <div class="feedback-box">
+            Εάν εντοπίσατε κάποιο πρόβλημα ή έχετε προτάσεις βελτίωσης, παρακαλούμε επικοινωνήστε μαζί μας:
+
+            📧 Email: support@nomikos-voithos.gr
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Footer
+        st.markdown(f"""
+        <div style="text-align: center; color: #666;">
+            Τελευταία ενημέρωση: {version_date.strftime('%d/%m/%Y %H:%M')}
+        </div>
+        """, unsafe_allow_html=True)
 
     except Exception as e:
-        st.error("Παρουσιάστηκε σφάλμα κατά την προβολή του περιεχομένου. Παρακαλώ δοκιμάστε ξανά.")
-        st.exception(e)
-
-    # Footer
-    st.markdown("---")
-    st.markdown(f"""
-    <div style="text-align: center; color: #666;">
-        Τελευταία ενημέρωση: {version_date.strftime('%d/%m/%Y %H:%M')}
-    </div>
-    """, unsafe_allow_html=True)
+        logger.error(f"Application error: {str(e)}")
+        st.error("Παρουσιάστηκε σφάλμα. Παρακαλώ ανανεώστε τη σελίδα ή επικοινωνήστε με την υποστήριξη.")
 
 if __name__ == "__main__":
     main()
