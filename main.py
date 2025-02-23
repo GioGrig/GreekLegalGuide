@@ -148,7 +148,7 @@ def main():
     # Home button
     if st.sidebar.button("🏠 Αρχική"):
         st.session_state.show_home = True
-        st.experimental_rerun()
+        st.rerun()
 
     # Help button
     if st.sidebar.button("ℹ️ Βοήθεια"):
