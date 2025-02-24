@@ -11,6 +11,7 @@ import tempfile
 import os
 from pathlib import Path
 import base64
+from utils.bookmarks import BookmarkManager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -216,6 +217,10 @@ def main():
         if 'cached_categories' not in st.session_state:
             st.session_state.cached_categories = CATEGORIES
 
+        # Initialize BookmarkManager in session state
+        if 'bookmark_manager' not in st.session_state:
+            st.session_state.bookmark_manager = BookmarkManager()
+
         # Display version badge
         version_date = datetime.now()
         st.markdown(f"""
@@ -229,6 +234,20 @@ def main():
 
         # Sidebar navigation
         st.sidebar.title("Πλοήγηση")
+
+        # Quick Reference section in sidebar
+        st.sidebar.markdown("### 🔖 Γρήγορη Αναφορά")
+        bookmarks = st.session_state.bookmark_manager.get_all_bookmarks()
+        if bookmarks:
+            for article_id, bookmark in bookmarks.items():
+                with st.sidebar.expander(f"📑 {bookmark['title'][:50]}...", expanded=False):
+                    st.write(f"**Κατηγορία:** {bookmark['category']}")
+                    st.write(f"**Υποκατηγορία:** {bookmark['subcategory']}")
+                    if st.button("🗑️ Αφαίρεση", key=f"remove_{article_id}"):
+                        st.session_state.bookmark_manager.remove_bookmark(article_id)
+                        st.rerun()
+        else:
+            st.sidebar.info("Δεν έχετε αποθηκεύσει άρθρα στη Γρήγορη Αναφορά.")
 
         # Help button
         if st.sidebar.button("ℹ️ Βοήθεια"):
@@ -333,11 +352,37 @@ def main():
                                     </div>
                                     """, unsafe_allow_html=True)
 
-                            # Display articles
+                            # Display articles with bookmark buttons
                             for article in articles:
+                                article_id = f"{article['category']}_{article['law']}"
+                                is_bookmarked = st.session_state.bookmark_manager.is_bookmarked(article_id)
+
+                                # Article header with bookmark button
+                                col1, col2 = st.columns([0.9, 0.1])
+                                with col1:
+                                    st.markdown(f"""
+                                    <div class="article-title">{article['title']}</div>
+                                    """, unsafe_allow_html=True)
+                                with col2:
+                                    if is_bookmarked:
+                                        if st.button("🔖", key=f"unbookmark_{article_id}"):
+                                            st.session_state.bookmark_manager.remove_bookmark(article_id)
+                                            st.rerun()
+                                    else:
+                                        if st.button("📌", key=f"bookmark_{article_id}"):
+                                            bookmark_data = {
+                                                'title': article['title'],
+                                                'category': article['category'],
+                                                'subcategory': subcategory,
+                                                'content': article['content'],
+                                                'law': article['law']
+                                            }
+                                            st.session_state.bookmark_manager.add_bookmark(article_id, bookmark_data)
+                                            st.rerun()
+
+                                # Rest of the article display remains unchanged
                                 st.markdown(f"""
                                 <div class="law-article">
-                                    <div class="article-title">{article['title']}</div>
                                     <strong>Νόμος:</strong> {article['law']}
                                     <div class="article-content">{article['content']}</div>
                                     <div class="article-penalty">
