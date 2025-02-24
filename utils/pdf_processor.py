@@ -105,7 +105,7 @@ def process_pdf_to_articles(file_path: str) -> List[Dict[str, str]]:
         # Check for article headers
         article_match = article_pattern.search(section)
         if article_match:
-            if current_article:
+            if current_article and current_article['content'].strip():
                 articles.append(current_article)
 
             article_num = article_match.group(1)
@@ -125,8 +125,8 @@ def process_pdf_to_articles(file_path: str) -> List[Dict[str, str]]:
             if any(word in section.lower() for word in ['τιμωρείται', 'ποινή', 'κύρωση', 'πρόστιμο']):
                 current_article['penalty'] = section.strip()
 
-    # Add the last article
-    if current_article:
+    # Add the last article if it exists and has content
+    if current_article and current_article['content'].strip():
         articles.append(current_article)
 
     return articles
