@@ -45,7 +45,6 @@ def get_source_url(category: str, subcategory: str = None) -> tuple:
 
 def display_pdf_download(source_path: str, custom_label: str = None, subcategory: str = None) -> None:
     """Display PDF download button with custom label"""
-    st.markdown("### 📄 Πλήρες Κείμενο Νόμου")
     try:
         # Ensure the path exists and is readable
         if not os.path.exists(source_path):
@@ -279,16 +278,21 @@ def main():
             with st.spinner("Φόρτωση περιεχομένου..."):
                 st.header(f"📖 {selected_category}")
 
-                # Display domestic violence guide PDF at the top of the section
-                if selected_category == "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)":
+                # Special handling for the guide PDF category
+                if selected_category == "ΟΔΗΓΟΣ ΑΝΤΙΜΕΤΩΠΙΣΗΣ ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗΣ ΒΙΑΣ":
                     guide_path = "attached_assets/Οδηγός αντιμετώπισης ενδοοικογενειακής βίας .pdf"
                     if os.path.exists(guide_path):
-                        st.markdown("### 📚 Οδηγός Αντιμετώπισης Ενδοοικογενειακής Βίας")
+                        st.markdown("""
+                        ### 📚 Οδηγός Αντιμετώπισης Ενδοοικογενειακής Βίας
+
+                        Αυτός ο οδηγός παρέχει λεπτομερείς πληροφορίες και κατευθυντήριες γραμμές για την αντιμετώπιση περιστατικών ενδοοικογενειακής βίας.
+                        """)
                         display_pdf_download(
                             guide_path,
                             "Κατέβασμα Οδηγού Αντιμετώπισης (PDF)",
                             "guide"
                         )
+                        return  # Exit early as we only need to show the PDF download
 
                 # Display category content
                 if selected_category in st.session_state.cached_categories:

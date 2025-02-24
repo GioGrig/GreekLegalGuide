@@ -11,10 +11,10 @@ class LawUpdater:
             "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "/attached_assets/ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ ενημερωμένος με Ν 5108_2024 loninja watermark.pdf",
             "ΝΑΡΚΩΤΙΚΑ": "/attached_assets/νομος περι ναρκωτικων.pdf",
             "ΟΠΛΑ": "/attached_assets/Ν.-2168.1993-ΠΕΡΙ-ΟΠΛΩΝ-ΕΠΙΚΑΙΡΟΠΟΙΗΜΕΝΟΣ.pdf",
+            "ΟΔΗΓΟΣ ΑΝΤΙΜΕΤΩΠΙΣΗΣ ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗΣ ΒΙΑΣ": "/attached_assets/Οδηγός αντιμετώπισης ενδοοικογενειακής βίας .pdf",
             "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)": {
                 "Ορισμοί": "/attached_assets/νομος ενδοοικογενειακης βιας.pdf",
-                "Σωματική Βία": "/attached_assets/νομος ενδοοικογενειακης βιας.pdf",
-                "Οδηγός Αντιμετώπισης": "/attached_assets/Οδηγός αντιμετώπισης ενδοοικογενειακής βίας .pdf"
+                "Σωματική Βία": "/attached_assets/νομος ενδοοικογενειακης βιας.pdf"
             },
             "ΝΟΜΙΜΕΣ ΔΙΑΔΙΚΑΣΙΕΣ - 141/1991": "/attached_assets/ΠΔ 141 1991 ΑΡΜΟΔΙΟΤΗΤΕΣ ΚΑΙ ΕΝΕΡΓΕΙΕΣ ΕΛΑΣ.pdf",
             "ΚΟΚ-ΤΡΟΧΟΝΟΜΙΚΑ": "/attached_assets/neoskok.pdf",
@@ -66,7 +66,7 @@ class LawUpdater:
         processed_data = {
             'articles': []
         }
-        
+
         for section in sections:
             if 'Άρθρο' in section:
                 processed_data['articles'].append({
@@ -74,7 +74,7 @@ class LawUpdater:
                     'content': section,
                     'last_updated': datetime.now().isoformat()
                 })
-        
+
         return processed_data
 
     def update_laws(self) -> bool:
@@ -92,7 +92,7 @@ class LawUpdater:
         for category, url in self.sources.items():
             print(f"Checking updates for {category}...")
             content = self.fetch_latest_content(url)
-            
+
             if content:
                 processed_data = self.process_content(content)
                 if processed_data['articles']:
@@ -103,7 +103,7 @@ class LawUpdater:
         if updated:
             self._save_data(current_data)
             print("Law database updated successfully")
-        
+
         return updated
 
 def update_categories_from_database():
