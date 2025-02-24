@@ -279,6 +279,17 @@ def main():
             with st.spinner("Φόρτωση περιεχομένου..."):
                 st.header(f"📖 {selected_category}")
 
+                # Display domestic violence guide PDF at the top of the section
+                if selected_category == "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)":
+                    guide_path = "attached_assets/Οδηγός αντιμετώπισης ενδοοικογενειακής βίας .pdf"
+                    if os.path.exists(guide_path):
+                        st.markdown("### 📚 Οδηγός Αντιμετώπισης Ενδοοικογενειακής Βίας")
+                        display_pdf_download(
+                            guide_path,
+                            "Κατέβασμα Οδηγού Αντιμετώπισης (PDF)",
+                            "guide"
+                        )
+
                 # Display category content
                 if selected_category in st.session_state.cached_categories:
                     for subcategory, articles in st.session_state.cached_categories[selected_category].items():
@@ -291,8 +302,6 @@ def main():
                                     if selected_category == "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)":
                                         if subcategory in ["Ορισμοί", "Σωματική Βία"]:
                                             display_pdf_download(source_path, "Κατέβασμα Νόμου 3500/2006 (PDF)", subcategory)
-                                        elif subcategory == "Οδηγός Αντιμετώπισης":
-                                            display_pdf_download(source_path, "Κατέβασμα Οδηγού Αντιμετώπισης (PDF)", subcategory)
                                     else:
                                         display_pdf_download(source_path, None, subcategory)
                                 else:
