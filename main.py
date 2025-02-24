@@ -351,7 +351,7 @@ def main():
                             "Κατέβασμα Νόμου Περί Ναρκωτικών (PDF)",
                             "narcotics"
                         )
-                        return
+                    
 
                 # Display category content
                 if selected_category in st.session_state.cached_categories:
