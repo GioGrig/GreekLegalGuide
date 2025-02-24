@@ -245,18 +245,8 @@ def main():
         # Sidebar navigation
         st.sidebar.title("Πλοήγηση")
 
-
-        # Department selection in sidebar
-        departments = get_departments()
-        selected_department = st.sidebar.selectbox(
-            "Επιλέξτε Τμήμα:",
-            [""] + departments,
-            index=0,
-            key="department_selector"
-        )
-
         # Welcome message in sidebar (permanent fixture)
-        welcome_message = get_welcome_message(selected_department if selected_department else None)
+        welcome_message = get_welcome_message(None)  # Always show default message
         st.sidebar.markdown(f"""
         <div class="sidebar-welcome">
         {welcome_message}
