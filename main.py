@@ -43,7 +43,7 @@ def get_source_url(category: str, subcategory: str = None) -> tuple:
             return (pdf_path, True)  # Return path and flag indicating it's a local file
     return (source, False)  # Return URL and flag indicating it's an external link
 
-def display_pdf_download(source_path: str, custom_label: str = None) -> None:
+def display_pdf_download(source_path: str, custom_label: str = None, subcategory: str = None) -> None:
     """Display PDF download button with custom label"""
     st.markdown("### 📄 Πλήρες Κείμενο Νόμου")
     try:
@@ -53,8 +53,13 @@ def display_pdf_download(source_path: str, custom_label: str = None) -> None:
             st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
             return
 
-        # Generate a unique key for each download button based on the filename and custom label
-        button_key = f"download_btn_{os.path.basename(source_path).replace(' ', '_')}_{custom_label.replace(' ', '_') if custom_label else ''}"
+        # Generate a unique key for each download button based on the filename, custom label, and subcategory
+        key_parts = [
+            os.path.basename(source_path).replace(' ', '_'),
+            custom_label.replace(' ', '_') if custom_label else '',
+            subcategory.replace(' ', '_') if subcategory else ''
+        ]
+        button_key = f"download_btn_{'_'.join(filter(None, key_parts))}"
 
         with open(source_path, "rb") as pdf_file:
             PDFbyte = pdf_file.read()
@@ -285,11 +290,11 @@ def main():
                                 if is_local:
                                     if selected_category == "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)":
                                         if subcategory in ["Ορισμοί", "Σωματική Βία"]:
-                                            display_pdf_download(source_path, "Κατέβασμα Νόμου 3500/2006 (PDF)")
+                                            display_pdf_download(source_path, "Κατέβασμα Νόμου 3500/2006 (PDF)", subcategory)
                                         elif subcategory == "Οδηγός Αντιμετώπισης":
-                                            display_pdf_download(source_path, "Κατέβασμα Οδηγού Αντιμετώπισης (PDF)")
+                                            display_pdf_download(source_path, "Κατέβασμα Οδηγού Αντιμετώπισης (PDF)", subcategory)
                                     else:
-                                        display_pdf_download(source_path)
+                                        display_pdf_download(source_path, None, subcategory)
                                 else:
                                     st.markdown(f"""
                                     <div style="text-align: right; margin-bottom: 20px;">
