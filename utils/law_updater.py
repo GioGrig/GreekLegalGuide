@@ -9,7 +9,7 @@ class LawUpdater:
         self.data_path = data_path
         self.sources = {
             "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "/attached_assets/ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ ενημερωμένος με Ν 5108_2024 loninja watermark.pdf",
-            "ΝΑΡΚΩΤΙΚΑ": "/attached_assets/νομος περι ναρκωτικων.pdf",
+            "ΝΑΡΚΩΤΙΚΑ": "/attached_assets/nomos peri narkotikon.pdf",  # Updated path to new PDF
             "ΟΠΛΑ": "/attached_assets/Ν.-2168.1993-ΠΕΡΙ-ΟΠΛΩΝ-ΕΠΙΚΑΙΡΟΠΟΙΗΜΕΝΟΣ.pdf",
             "ΟΔΗΓΟΣ ΑΝΤΙΜΕΤΩΠΙΣΗΣ ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗΣ ΒΙΑΣ": "/attached_assets/Οδηγός αντιμετώπισης ενδοοικογενειακής βίας .pdf",
             "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)": {

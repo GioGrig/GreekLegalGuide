@@ -294,6 +294,22 @@ def main():
                         )
                         return  # Exit early as we only need to show the PDF download
 
+                # Special handling for ΝΑΡΚΩΤΙΚΑ section
+                elif selected_category == "ΝΑΡΚΩΤΙΚΑ":
+                    narcotics_path = "attached_assets/nomos peri narkotikon.pdf"
+                    if os.path.exists(narcotics_path):
+                        st.markdown("""
+                        ### 📚 Νόμος Περί Ναρκωτικών
+
+                        Πλήρες κείμενο του νόμου περί ναρκωτικών ουσιών και σχετικών διατάξεων.
+                        """)
+                        display_pdf_download(
+                            narcotics_path,
+                            "Κατέβασμα Νόμου Περί Ναρκωτικών (PDF)",
+                            "narcotics"
+                        )
+                        return  # Exit early as we only need to show the PDF download
+
                 # Display category content
                 if selected_category in st.session_state.cached_categories:
                     for subcategory, articles in st.session_state.cached_categories[selected_category].items():
