@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import base64
 from typing import Dict, Optional
+from utils.welcome_messages import get_welcome_message, get_departments, update_department_message, update_default_message
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -245,6 +246,45 @@ def main():
         st.sidebar.title("Πλοήγηση")
 
 
+        # Department selection in sidebar
+        departments = get_departments()
+        selected_department = st.sidebar.selectbox(
+            "Επιλέξτε Τμήμα:",
+            [""] + departments,
+            index=0,
+            key="department_selector"
+        )
+
+        # Welcome message in sidebar (permanent fixture)
+        welcome_message = get_welcome_message(selected_department if selected_department else None)
+        st.sidebar.markdown(f"""
+        <div class="sidebar-welcome">
+        {welcome_message}
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Admin section for welcome message management
+        with st.sidebar.expander("🔒 Διαχείριση Μηνυμάτων Καλωσορίσματος"):
+            st.write("Διαχείριση μηνυμάτων καλωσορίσματος ανά τμήμα:")
+
+            # Add new department
+            new_dept = st.text_input("Νέο Τμήμα:", key="new_dept")
+            new_msg = st.text_area("Μήνυμα Καλωσορίσματος:", key="new_msg")
+            if st.button("Προσθήκη/Ενημέρωση"):
+                if new_dept and new_msg:
+                    update_department_message(new_dept, new_msg)
+                    st.success(f"Το μήνυμα για το τμήμα {new_dept} ενημερώθηκε επιτυχώς!")
+                    st.experimental_rerun()
+
+            # Update default message
+            st.write("---")
+            st.write("Ενημέρωση προεπιλεγμένου μηνύματος:")
+            default_msg = st.text_area("Προεπιλεγμένο Μήνυμα:", value=get_welcome_message(), key="default_msg")
+            if st.button("Ενημέρωση Προεπιλεγμένου"):
+                update_default_message(default_msg)
+                st.success("Το προεπιλεγμένο μήνυμα ενημερώθηκε επιτυχώς!")
+                st.experimental_rerun()
+
         # Help button
         if st.sidebar.button("ℹ️ Βοήθεια"):
             show_help()
@@ -274,13 +314,6 @@ def main():
             "Επιλέξτε Κατηγορία:",
             list(st.session_state.cached_categories.keys())
         )
-
-        # Welcome message in sidebar (permanent fixture)
-        st.sidebar.markdown("""
-        <div class="sidebar-welcome">
-        Καλωσήρθατε στον Νομικό Βοηθό. Αυτή η εφαρμογή δημιουργήθηκε από αστυνομικούς για αστυνομικούς με την υποστήριξη τεχνητής νοημοσύνης, με στόχο την υποστήριξη του καθημερινού σας έργου. Παρέχει άμεση πρόσβαση σε νομικές πληροφορίες και οδηγίες, διευκολύνοντας την αποτελεσματική εκτέλεση των καθηκόντων σας. Είθε να συμβάλει στην ασφαλή και επιτυχή εκπλήρωση της αποστολής σας. Καλή δύναμη και ασφαλείς υπηρεσίες.
-        </div>
-        """, unsafe_allow_html=True)
 
         # Search with loading state
         search_query = st.text_input(
