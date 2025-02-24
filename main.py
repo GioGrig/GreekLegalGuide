@@ -11,8 +11,7 @@ import tempfile
 import os
 from pathlib import Path
 import base64
-from utils.bookmarks import BookmarkManager
-from typing import Dict
+from typing import Dict, Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -34,27 +33,23 @@ def get_source_url(category: str, subcategory: str = None) -> tuple:
     law_updater = LawUpdater()
     source = law_updater.sources.get(category, "#")
 
-    # Handle nested sources (e.g., ΑΣΤΥΝΟΜΙΚΟ ΠΡΟΣΩΠΙΚΟ category)
     if isinstance(source, dict) and subcategory:
         source = source.get(subcategory, "#")
 
-    # Handle local PDF files
     if source and isinstance(source, str) and source.startswith("/"):
-        pdf_path = source[1:]  # Remove leading slash
+        pdf_path = source[1:]
         if os.path.exists(pdf_path):
-            return (pdf_path, True)  # Return path and flag indicating it's a local file
-    return (source, False)  # Return URL and flag indicating it's an external link
+            return (pdf_path, True)
+    return (source, False)
 
-def display_pdf_download(source_path: str, custom_label: str = None, subcategory: str = None) -> None:
+def display_pdf_download(source_path: str, custom_label: Optional[str] = None, subcategory: Optional[str] = None) -> None:
     """Display PDF download button with custom label"""
     try:
-        # Ensure the path exists and is readable
         if not os.path.exists(source_path):
             logger.error(f"PDF file not found: {source_path}")
             st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
             return
 
-        # Generate a unique key for each download button based on the filename, custom label, and subcategory
         key_parts = [
             os.path.basename(source_path).replace(' ', '_'),
             custom_label.replace(' ', '_') if custom_label else '',
@@ -74,6 +69,73 @@ def display_pdf_download(source_path: str, custom_label: str = None, subcategory
     except Exception as e:
         logger.error(f"Error reading PDF {source_path}: {str(e)}")
         st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
+
+def display_article(article: Dict[str, str], subcategory: str) -> None:
+    """Helper function to display an article"""
+    st.markdown(f"""
+    <div class="law-article">
+        <div class="article-title">{article['title']}</div>
+        <strong>Νόμος:</strong> {article['law']}
+        <div class="article-content">{article['content']}</div>
+        {"<div class='article-penalty'><strong>Ποινή:</strong> " + article['penalty'] + "</div>" if article['penalty'] else ""}
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def show_help():
+    """Display help and documentation"""
+    st.markdown("""
+    ### 📖 Οδηγίες Χρήσης
+
+    1. **Πλοήγηση**
+       - Χρησιμοποιήστε το κουμπί 🏠 Αρχική για να επιστρέψετε στην αρχική σελίδα
+       - Χρησιμοποιήστε το μενού στα αριστερά για να επιλέξετε κατηγορία
+       - Κάθε κατηγορία περιέχει υποκατηγορίες με σχετικά άρθρα
+
+    2. **Αναζήτηση**
+       - Πληκτρολογήστε λέξεις-κλειδιά στο πεδίο αναζήτησης
+       - Τα αποτελέσματα θα εμφανιστούν αυτόματα
+
+    3. **Ενημερώσεις**
+       - Το σύστημα ενημερώνεται αυτόματα με νέες νομικές διατάξεις
+       - Δείτε την ημερομηνία τελευταίας ενημέρωσης στο κάτω μέρος
+
+    4. **Προβολή Άρθρων**
+       - Κάντε κλικ στα βέλη ▼ για να δείτε το πλήρες περιεχόμενο
+       - Οι ποινές εμφανίζονται με κόκκινο φόντο
+    """)
+
+def process_uploaded_files(uploaded_files):
+    """Process uploaded PDF files and update categories"""
+    temp_dir = Path("temp_pdfs")
+    temp_dir.mkdir(exist_ok=True)
+
+    try:
+        for uploaded_file in uploaded_files:
+            temp_path = temp_dir / uploaded_file.name
+            with open(temp_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+        all_articles = process_multiple_pdfs(str(temp_dir))
+
+        for category, subcategories in all_articles.items():
+            if category not in st.session_state.cached_categories:
+                st.session_state.cached_categories[category] = {}
+
+            for subcategory, articles in subcategories.items():
+                if subcategory not in st.session_state.cached_categories[category]:
+                    st.session_state.cached_categories[category][subcategory] = []
+                st.session_state.cached_categories[category][subcategory].extend(articles)
+
+        return True
+    except Exception as e:
+        logger.error(f"Error processing PDFs: {str(e)}")
+        return False
+    finally:
+        for file in temp_dir.glob("*.pdf"):
+            file.unlink()
+        temp_dir.rmdir()
+
 
 # Set page config
 st.set_page_config(
@@ -153,126 +215,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def show_help():
-    """Display help and documentation"""
-    st.markdown("""
-    ### 📖 Οδηγίες Χρήσης
-
-    1. **Πλοήγηση**
-       - Χρησιμοποιήστε το κουμπί 🏠 Αρχική για να επιστρέψετε στην αρχική σελίδα
-       - Χρησιμοποιήστε το μενού στα αριστερά για να επιλέξετε κατηγορία
-       - Κάθε κατηγορία περιέχει υποκατηγορίες με σχετικά άρθρα
-
-    2. **Αναζήτηση**
-       - Πληκτρολογήστε λέξεις-κλειδιά στο πεδίο αναζήτησης
-       - Τα αποτελέσματα θα εμφανιστούν αυτόματα
-
-    3. **Ενημερώσεις**
-       - Το σύστημα ενημερώνεται αυτόματα με νέες νομικές διατάξεις
-       - Δείτε την ημερομηνία τελευταίας ενημέρωσης στο κάτω μέρος
-
-    4. **Προβολή Άρθρων**
-       - Κάντε κλικ στα βέλη ▼ για να δείτε το πλήρες περιεχόμενο
-       - Οι ποινές εμφανίζονται με κόκκινο φόντο
-    """)
-
-def process_uploaded_files(uploaded_files):
-    """Process uploaded PDF files and update categories"""
-    temp_dir = Path("temp_pdfs")
-    temp_dir.mkdir(exist_ok=True)
-
-    try:
-        # Save uploaded files temporarily
-        for uploaded_file in uploaded_files:
-            temp_path = temp_dir / uploaded_file.name
-            with open(temp_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-
-        # Process all PDFs in the temp directory
-        all_articles = process_multiple_pdfs(str(temp_dir))
-
-        # Update session state with new articles
-        for category, subcategories in all_articles.items():
-            if category not in st.session_state.cached_categories:
-                st.session_state.cached_categories[category] = {}
-
-            for subcategory, articles in subcategories.items():
-                if subcategory not in st.session_state.cached_categories[category]:
-                    st.session_state.cached_categories[category][subcategory] = []
-                st.session_state.cached_categories[category][subcategory].extend(articles)
-
-        return True
-    except Exception as e:
-        logger.error(f"Error processing PDFs: {str(e)}")
-        return False
-    finally:
-        # Cleanup temp files
-        for file in temp_dir.glob("*.pdf"):
-            file.unlink()
-        temp_dir.rmdir()
-
-
-def display_article(article: Dict[str, str], subcategory: str) -> None:
-    """Helper function to display an article with bookmark functionality"""
-    article_id = f"{article['category']}_{article['law']}"
-    is_bookmarked = st.session_state.bookmark_manager.is_bookmarked(article_id)
-
-    # Article header with bookmark button
-    col1, col2 = st.columns([0.9, 0.1])
-    with col1:
-        st.markdown(f"""
-        <div class="article-title">{article['title']}</div>
-        """, unsafe_allow_html=True)
-    with col2:
-        if is_bookmarked:
-            if st.button("🔖", key=f"unbookmark_{article_id}"):
-                st.session_state.bookmark_manager.remove_bookmark(article_id)
-                st.rerun()
-        else:
-            if st.button("📌", key=f"bookmark_{article_id}"):
-                bookmark_data = {
-                    'title': article['title'],
-                    'category': article['category'],
-                    'subcategory': subcategory,
-                    'content': article['content'],
-                    'law': article['law']
-                }
-                st.session_state.bookmark_manager.add_bookmark(article_id, bookmark_data)
-                st.rerun()
-
-    # Display article content
-    st.markdown(f"""
-    <div class="law-article">
-        <strong>Νόμος:</strong> {article['law']}
-        <div class="article-content">{article['content']}</div>
-        {"<div class='article-penalty'><strong>Ποινή:</strong> " + article['penalty'] + "</div>" if article['penalty'] else ""}
-    </div>
-    """, unsafe_allow_html=True)
-
-def display_bookmarks_sidebar():
-    """Display bookmarks in the sidebar"""
-    st.sidebar.markdown("### 🔖 Γρήγορη Αναφορά")
-    bookmarks = st.session_state.bookmark_manager.get_all_bookmarks()
-    if bookmarks:
-        for article_id, bookmark in bookmarks.items():
-            with st.sidebar.expander(f"📑 {bookmark['title'][:50]}...", expanded=False):
-                st.write(f"**Κατηγορία:** {bookmark.get('category', 'N/A')}")
-                st.write(f"**Υποκατηγορία:** {bookmark.get('subcategory', 'N/A')}")
-                if st.button("🗑️ Αφαίρεση", key=f"remove_{article_id}"):
-                    st.session_state.bookmark_manager.remove_bookmark(article_id)
-                    st.rerun()
-    else:
-        st.sidebar.info("Δεν έχετε αποθηκεύσει άρθρα στη Γρήγορη Αναφορά.")
-
-
 def main():
     try:
-        # Initialize session state
+        # Initialize session state for categories if not exists
         if 'cached_categories' not in st.session_state:
             st.session_state.cached_categories = CATEGORIES
-
-        if 'bookmark_manager' not in st.session_state:
-            st.session_state.bookmark_manager = BookmarkManager()
 
         # Display version badge
         version_date = datetime.now()
@@ -288,12 +235,9 @@ def main():
         # Sidebar navigation
         st.sidebar.title("Πλοήγηση")
 
-        # Display bookmarks in sidebar
-        display_bookmarks_sidebar()
 
         # Help button
         if st.sidebar.button("ℹ️ Βοήθεια"):
-            st.session_state.show_help = True
             show_help()
 
         # Admin section for PDF uploads
@@ -353,7 +297,7 @@ def main():
                             "Κατέβασμα Οδηγού Αντιμετώπισης (PDF)",
                             "guide"
                         )
-                        return  # Exit early as we only need to show the PDF download
+                        return
 
                 # Special handling for ΝΑΡΚΩΤΙΚΑ section
                 elif selected_category == "ΝΑΡΚΩΤΙΚΑ":
@@ -369,13 +313,12 @@ def main():
                             "Κατέβασμα Νόμου Περί Ναρκωτικών (PDF)",
                             "narcotics"
                         )
-                        return  # Exit early as we only need to show the PDF download
+                        return
 
                 # Display category content
                 if selected_category in st.session_state.cached_categories:
                     for subcategory, articles in st.session_state.cached_categories[selected_category].items():
                         with st.expander(f"📚 {subcategory}", expanded=True):
-                            # Get source for category/subcategory combination
                             source_path, is_local = get_source_url(selected_category, subcategory)
 
                             if source_path != "#":
@@ -394,7 +337,6 @@ def main():
                                     </div>
                                     """, unsafe_allow_html=True)
 
-                            # Display articles with bookmark buttons
                             for article in articles:
                                 display_article(article, subcategory)
 
