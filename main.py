@@ -47,14 +47,24 @@ def display_pdf_download(source_path: str) -> None:
     """Display PDF download button"""
     st.markdown("### 📄 Πλήρες Κείμενο Νόμου")
     try:
+        # Ensure the path exists and is readable
+        if not os.path.exists(source_path):
+            logger.error(f"PDF file not found: {source_path}")
+            st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
+            return
+
+        # Generate a unique key for each download button based on the filename
+        button_key = f"download_btn_{os.path.basename(source_path).replace(' ', '_')}"
+
         with open(source_path, "rb") as pdf_file:
             PDFbyte = pdf_file.read()
-        st.download_button(
-            label="Κατέβασμα PDF",
-            data=PDFbyte,
-            file_name=os.path.basename(source_path),
-            mime='application/pdf'
-        )
+            st.download_button(
+                label="Κατέβασμα PDF",
+                data=PDFbyte,
+                file_name=os.path.basename(source_path),
+                mime='application/pdf',
+                key=button_key
+            )
     except Exception as e:
         logger.error(f"Error reading PDF {source_path}: {str(e)}")
         st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
