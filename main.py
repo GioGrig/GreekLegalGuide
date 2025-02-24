@@ -71,15 +71,24 @@ def display_pdf_download(source_path: str, custom_label: Optional[str] = None, s
         st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
 
 def display_article(article: Dict[str, str], subcategory: str) -> None:
-    """Helper function to display an article"""
+    """Helper function to display an article with improved formatting"""
+    # Pre-compute penalty section if it exists
+    penalty_html = f"""<div class='article-penalty'>
+        <strong>Ποινή:</strong> {article['penalty']}
+    </div>""" if article.get('penalty') else ""
+
+    # Format the content with proper line breaks
+    content_html = article['content'].replace('\n', '<br>')
+
     st.markdown(f"""
     <div class="law-article">
         <div class="article-title">{article['title']}</div>
         <strong>Νόμος:</strong> {article['law']}
-        <div class="article-content">{article['content']}</div>
-        {"<div class='article-penalty'><strong>Ποινή:</strong> " + article['penalty'] + "</div>" if article['penalty'] else ""}
+        <div class="article-content">{content_html}</div>
+        {penalty_html}
     </div>
     """, unsafe_allow_html=True)
+
 
 
 def show_help():
