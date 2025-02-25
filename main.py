@@ -496,17 +496,11 @@ def main():
                                 if is_local:
                                     if selected_category == "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)":
                                         if subcategory in ["Ορισμοί", "Σωματική Βία"]:
-                                            display_pdf_download(source_path, "Κατέβασμα Νόμου 3500/2006 (PDF)", subcategory)
+                                            display_pdf_download(source_path[1:], "Κατέβασμα Νόμου 3500/2006 (PDF)", subcategory)
                                     else:
-                                        display_pdf_download(source_path, None, subcategory)
+                                        display_pdf_download(source_path[1:], "Κατέβασμα PDF", subcategory)
                                 else:
-                                    st.markdown(f"""
-                                    <div style="text-align: right; margin-bottom: 20px;">
-                                        <a href="{source_path}" target="_blank" style="color: #1f4e79;">
-                                            📄 Πλήρες Κείμενο Νόμου
-                                        </a>
-                                    </div>
-                                    """, unsafe_allow_html=True)
+                                    display_pdf_download(source_path, "Κατέβασμα PDF", subcategory)
 
                             for article in articles:
                                 display_article(article, subcategory)
