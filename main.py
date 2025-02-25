@@ -358,6 +358,31 @@ def main():
                         )
 
 
+                # Special handling for ΚΩΔΙΚΑΣ ΠΟΙΝΙΚΗΣ ΔΙΚΟΝΟΜΙΑΣ section
+                elif selected_category == "ΚΩΔΙΚΑΣ ΠΟΙΝΙΚΗΣ ΔΙΚΟΝΟΜΙΑΣ":
+                    source_path, is_local, external_url = get_source_url(selected_category)
+                    st.markdown("""
+                    ### 📚 Κώδικας Ποινικής Δικονομίας
+
+                    Πλήρες κείμενο του Κώδικα Ποινικής Δικονομίας που περιλαμβάνει:
+                    - Διαδικασίες ποινικής δίωξης
+                    - Δικαιώματα και υποχρεώσεις
+                    - Ανακριτικές διαδικασίες
+                    - Δικαστικές διαδικασίες
+                    """)
+
+                    if is_local:
+                        display_pdf_download(source_path[1:], "Κατέβασμα Τοπικού Αντιγράφου (PDF)")
+
+                    if external_url:
+                        st.markdown(f"""
+                        <div style="text-align: right; margin-bottom: 20px;">
+                            <a href="{external_url}" target="_blank" style="color: #1f4e79;">
+                                📄 Επίσημο PDF Υπουργείου Δικαιοσύνης
+                            </a>
+                        </div>
+                        """, unsafe_allow_html=True)
+
                 # Special handling for ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ section
                 elif selected_category == "ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ":
                     criminal_procedure_path = "attached_assets/Κώδικας-Ποινικής-Δικονομίας.pdf"

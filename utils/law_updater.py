@@ -12,8 +12,11 @@ class LawUpdater:
                 "local": "/attached_assets/Ποινικός-Κώδικας.pdf",
                 "external": "https://www.ministryofjustice.gr/wp-content/uploads/2019/10/Ποινικός-Κώδικας.pdf"
             },
+            "ΚΩΔΙΚΑΣ ΠΟΙΝΙΚΗΣ ΔΙΚΟΝΟΜΙΑΣ": {
+                "local": "/attached_assets/Κώδικας-Ποινικής-Δικονομίας.pdf",
+                "external": "https://ministryofjustice.gr/wp-content/uploads/2019/10/Κώδικας-Ποινικής-Δικονομίας.pdf"
+            },
             "ΕΙΔΙΚΟΙ ΠΟΙΝΙΚΟΙ ΝΟΜΟΙ": "/attached_assets/eidikoi_poinikoi_nomoi-poinologi.pdf",
-            "ΚΩΔΙΚΑΣ ΠΟΙΝΙΚΗΣ ΔΙΚΟΝΟΜΙΑΣ": "/attached_assets/Κώδικας-Ποινικής-Δικονομίας.pdf",
             "ΝΑΡΚΩΤΙΚΑ": "/attached_assets/nomos peri narkotikon.pdf",
             "ΟΠΛΑ": "/attached_assets/Ν.-2168.1993-ΠΕΡΙ-ΟΠΛΩΝ-ΕΠΙΚΑΙΡΟΠΟΙΗΜΕΝΟΣ.pdf",
             "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)": {
