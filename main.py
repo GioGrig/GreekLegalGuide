@@ -42,7 +42,7 @@ def get_source_url(category: str, subcategory: str = None) -> tuple:
             source = source.get(subcategory, "#")
 
     if source and isinstance(source, str) and source.startswith("/"):
-        pdf_path = source[1:]
+        pdf_path = source
         if os.path.exists(pdf_path):
             return (pdf_path, True, None)
     return (source, False, None)
@@ -51,6 +51,9 @@ def display_pdf_download(source_path: str, custom_label: Optional[str] = None, s
     """Display PDF download button with custom label"""
     try:
         logger.info(f"Attempting to display PDF download for: {source_path}")
+        # Remove any leading slash if present
+        source_path = source_path.lstrip('/')
+
         if not os.path.exists(source_path):
             logger.error(f"PDF file not found: {source_path}")
             st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
@@ -429,7 +432,7 @@ def main():
                     """)
 
                     if is_local:
-                        display_pdf_download(source_path[1:], "Κατέβασμα Τοπικού Αντιγράφου (PDF)")
+                        display_pdf_download(source_path, "Κατέβασμα Τοπικού Αντιγράφου (PDF)")
 
                     if external_url:
                         st.markdown(f"""
@@ -474,7 +477,7 @@ def main():
                     Διαθέσιμες πηγές:
                     """)
                     if is_local:
-                        display_pdf_download(source_path[1:], "Κατέβασμα Τοπικού Αντιγράφου (PDF)")
+                        display_pdf_download(source_path, "Κατέβασμα Τοπικού Αντιγράφου (PDF)")
 
                     if external_url:
                         st.markdown(f"""
@@ -496,9 +499,9 @@ def main():
                                 if is_local:
                                     if selected_category == "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)":
                                         if subcategory in ["Ορισμοί", "Σωματική Βία"]:
-                                            display_pdf_download(source_path[1:], "Κατέβασμα Νόμου 3500/2006 (PDF)", subcategory)
+                                            display_pdf_download("attached_assets/νομος ενδοοικογενειακης βιας.pdf", "Κατέβασμα Νόμου 3500/2006 (PDF)", subcategory)
                                     else:
-                                        display_pdf_download(source_path[1:], "Κατέβασμα PDF", subcategory)
+                                        display_pdf_download(source_path.lstrip('/'), "Κατέβασμα PDF", subcategory)
                                 else:
                                     display_pdf_download(source_path, "Κατέβασμα PDF", subcategory)
 
