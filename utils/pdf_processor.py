@@ -60,13 +60,12 @@ def get_category_from_filename(filename: str) -> Tuple[str, str]:
         'ενδοοικογενειακης': ('ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ', 'Βασικές Διατάξεις'),
         'δικονομιασ': ('ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ', 'Γενικές Διατάξεις'),
         'poinikoi_nomoi': ('ΕΙΔΙΚΟΙ ΠΟΙΝΙΚΟΙ ΝΟΜΟΙ', 'Γενικές Διατάξεις')
-        # Remove cyber and ηλεκτρονικο entries
     }
 
     for key, (category, subcategory) in categories.items():
         if key in filename:
             return category, subcategory
-    return 'ΓΕΝΙΚΑ', 'Γενικές Διατάξεις'
+    return '', 'Βασικές Διατάξεις'
 
 def process_pdf_to_articles(file_path: str) -> List[Dict[str, str]]:
     """
