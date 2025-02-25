@@ -365,27 +365,39 @@ def main():
             with st.spinner("Φόρτωση περιεχομένου..."):
                 st.header(f"📖 {selected_category}")
 
-                # Special handling for the guide PDF category
-                if selected_category == "ΟΔΗΓΟΣ ΑΝΤΙΜΕΤΩΠΙΣΗΣ ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗΣ ΒΙΑΣ":
+                # Special handling for the guide PDF within ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ section
+                if selected_category == "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)":
+                    st.markdown("""
+                    ### 📚 Νόμος και Οδηγός Αντιμετώπισης Ενδοοικογενειακής Βίας
+
+                    Περιεχόμενα:
+                    - Βασικές διατάξεις του Ν.3500/2006
+                    - Αναλυτικός οδηγός χειρισμού περιστατικών
+                    - Διαδικασίες και πρωτόκολλα
+                    - Προστασία θυμάτων
+                    """)
+
                     guide_path = "attached_assets/Οδηγός αντιμετώπισης ενδοοικογενειακής βίας .pdf"
-                    if os.path.exists(guide_path):
-                        st.markdown("""
-                        ### 📚 Οδηγός Αντιμετώπισης Ενδοοικογενειακής Βίας
+                    law_path = "attached_assets/νομος ενδοοικογενειακης βιας.pdf"
 
-                        Αυτός ο οδηγός παρέχει λεπτομερείς πληροφορίες και κατευθυντήριες γραμμές για την αντιμετώπιση περιστατικών ενδοοικογενειακής βίας.
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if os.path.exists(guide_path):
+                            display_pdf_download(
+                                guide_path,
+                                "📖 Κατέβασμα Οδηγού Αντιμετώπισης",
+                                "guide"
+                            )
+                    with col2:
+                        if os.path.exists(law_path):
+                            display_pdf_download(
+                                law_path,
+                                "📜 Κατέβασμα Νόμου 3500/2006",
+                                "law"
+                            )
 
-                        Περιλαμβάνει:
-                        - Βήμα προς βήμα οδηγίες
-                        - Νομικό πλαίσιο
-                        - Διαδικασίες χειρισμού περιστατικών
-                        - Προστασία θυμάτων
-                        """)
-                        display_pdf_download(
-                            guide_path,
-                            "Κατέβασμα Οδηγού Αντιμετώπισης (PDF)",
-                            "guide"
-                        )
-                        return
+                # Special handling for ΟΔΗΓΟΣ ΑΝΤΙΜΕΤΩΠΙΣΗΣ ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗΣ ΒΙΑΣ category (removed - replaced by above)
+
 
                 # Special handling for ΝΑΡΚΩΤΙΚΑ section
                 elif selected_category == "ΝΑΡΚΩΤΙΚΑ":
