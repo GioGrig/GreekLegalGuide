@@ -357,7 +357,7 @@ def main():
 
                 # Special handling for ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ section
                 elif selected_category == "ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ":
-                    criminal_procedure_path = "attached_assets/Κώδικας-Ποινικής-Δικονομίας.pdf"
+                    criminal_procedure_path = os.path.join("attached_assets", "Κώδικας-Ποινικής-Δικονομίας.pdf")
                     logger.info(f"Processing ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ section, looking for PDF at: {criminal_procedure_path}")
                     if os.path.exists(criminal_procedure_path):
                         st.markdown("""
