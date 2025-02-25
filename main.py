@@ -355,7 +355,6 @@ def main():
                         )
 
 
-
                 # Special handling for ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ section
                 elif selected_category == "ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ":
                     criminal_procedure_path = "attached_assets/Κώδικας-Ποινικής-Δικονομίας.pdf"
