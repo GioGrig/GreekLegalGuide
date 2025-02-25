@@ -10,6 +10,7 @@ class LawUpdater:
         self.sources = {
             "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "/attached_assets/Ποινικός-Κώδικας.pdf",
             "ΕΙΔΙΚΟΙ ΠΟΙΝΙΚΟΙ ΝΟΜΟΙ": "/attached_assets/eidikoi_poinikoi_nomoi-poinologi.pdf",
+            "ΚΩΔΙΚΑΣ ΠΟΙΝΙΚΗΣ ΔΙΚΟΝΟΜΙΑΣ": "/attached_assets/Κώδικας-Ποινικής-Δικονομίας.pdf",
             "ΝΑΡΚΩΤΙΚΑ": "/attached_assets/nomos peri narkotikon.pdf",
             "ΟΠΛΑ": "/attached_assets/Ν.-2168.1993-ΠΕΡΙ-ΟΠΛΩΝ-ΕΠΙΚΑΙΡΟΠΟΙΗΜΕΝΟΣ.pdf",
             "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)": {
