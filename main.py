@@ -355,7 +355,7 @@ def main():
         # Category selection
         selected_category = st.sidebar.selectbox(
             "Επιλέξτε Κατηγορία:",
-            list(st.session_state.cached_categories.keys())
+            sorted(list(st.session_state.cached_categories.keys()))
         )
 
         # Search with loading state
