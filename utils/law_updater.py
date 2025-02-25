@@ -28,8 +28,7 @@ class LawUpdater:
                 "Πειθαρχικό Δίκαιο": "/attached_assets/peitharxiko dikaio astynomikon.pdf",
                 "Χρόνος Εργασίας": "/attached_assets/xronos ergasias astynomikon.pdf",
                 "Παροχές και Αποζημιώσεις": "/attached_assets/Παροχές προς προσωπικό τραυματισμοί εν υπηρεσία κτλ.pdf"
-            },
-            "ΗΛΕΚΤΡΟΝΙΚΟ ΕΓΚΛΗΜΑ": "/attached_assets/ΗΛΕΚΤΡΟΝΙΚΟ_ΕΓΚΛΗΜΑ.pdf"
+            }
         }
         self.last_update = self._load_last_update()
 
