@@ -19,6 +19,7 @@ class LawUpdater:
             "ΝΟΜΙΜΕΣ ΔΙΑΔΙΚΑΣΙΕΣ - 141/1991": "/attached_assets/ΠΔ 141 1991 ΑΡΜΟΔΙΟΤΗΤΕΣ ΚΑΙ ΕΝΕΡΓΕΙΕΣ ΕΛΑΣ.pdf",
             "ΚΟΚ-ΤΡΟΧΟΝΟΜΙΚΑ": "/attached_assets/neoskok.pdf",
             "ΝΟΜΟΣ ΠΕΡΙ ΚΑΤΟΙΚΙΔΙΩΝ": "/attached_assets/ΦΕΚ κατοικιδια.pdf",
+            "ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ": "/attached_assets/Κώδικας-Ποινικής-Δικονομίας.pdf",
             "ΑΣΤΥΝΟΜΙΚΟ ΠΡΟΣΩΠΙΚΟ": {
                 "Άδειες": "/attached_assets/adeies astynomikoy prosopikoy.pdf",
                 "Μεταθέσεις": "/attached_assets/metaueseis astynomikoy prosopikoy.pdf",

@@ -46,6 +46,7 @@ def get_source_url(category: str, subcategory: str = None) -> tuple:
 def display_pdf_download(source_path: str, custom_label: Optional[str] = None, subcategory: Optional[str] = None) -> None:
     """Display PDF download button with custom label"""
     try:
+        logger.info(f"Attempting to display PDF download for: {source_path}")
         if not os.path.exists(source_path):
             logger.error(f"PDF file not found: {source_path}")
             st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
@@ -67,6 +68,7 @@ def display_pdf_download(source_path: str, custom_label: Optional[str] = None, s
                 mime='application/pdf',
                 key=button_key
             )
+            logger.info(f"Successfully created download button for: {source_path}")
     except Exception as e:
         logger.error(f"Error reading PDF {source_path}: {str(e)}")
         st.error("Το αρχείο PDF δεν είναι διαθέσιμο.")
@@ -356,6 +358,7 @@ def main():
                 # Special handling for ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ section
                 elif selected_category == "ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ":
                     criminal_procedure_path = "attached_assets/Κώδικας-Ποινικής-Δικονομίας.pdf"
+                    logger.info(f"Processing ΠΟΙΝΙΚΗ ΔΙΚΟΝΟΜΙΑ section, looking for PDF at: {criminal_procedure_path}")
                     if os.path.exists(criminal_procedure_path):
                         st.markdown("""
                         ### 📚 Κώδικας Ποινικής Δικονομίας
@@ -371,7 +374,11 @@ def main():
                             "Κατέβασμα Κώδικα Ποινικής Δικονομίας (PDF)",
                             "criminal_procedure"
                         )
+                    else:
+                        logger.error(f"Criminal procedure PDF not found at: {criminal_procedure_path}")
+                        st.error("Το αρχείο PDF του Κώδικα Ποινικής Δικονομίας δεν είναι διαθέσιμο.")
                         return
+
 
                 # Display category content
                 if selected_category in st.session_state.cached_categories:
