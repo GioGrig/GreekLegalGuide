@@ -8,7 +8,7 @@ class LawUpdater:
     def __init__(self, data_path: str = "data/law_database.json"):
         self.data_path = data_path
         self.sources = {
-            "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "/attached_assets/ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ ενημερωμένος με Ν 5108_2024 loninja watermark.pdf",
+            "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "/attached_assets/Ποινικός-Κώδικας.pdf",
             "ΝΑΡΚΩΤΙΚΑ": "/attached_assets/nomos peri narkotikon.pdf",
             "ΟΠΛΑ": "/attached_assets/Ν.-2168.1993-ΠΕΡΙ-ΟΠΛΩΝ-ΕΠΙΚΑΙΡΟΠΟΙΗΜΕΝΟΣ.pdf",
             "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)": {
