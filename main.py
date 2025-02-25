@@ -13,6 +13,7 @@ from pathlib import Path
 import base64
 from typing import Dict, Optional
 from utils.welcome_messages import get_welcome_message, get_departments, update_department_message, update_default_message
+from utils.validation import ReferenceValidator # Added import
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -236,6 +237,10 @@ def main():
         if 'cached_categories' not in st.session_state:
             st.session_state.cached_categories = CATEGORIES
 
+        # Added validator initialization
+        if 'validator' not in st.session_state:
+            st.session_state.validator = ReferenceValidator(st.session_state.cached_categories)
+
         # Display version badge
         version_date = datetime.now()
         st.markdown(f"""
@@ -284,7 +289,7 @@ def main():
         if st.sidebar.button("ℹ️ Βοήθεια"):
             show_help()
 
-        # Admin section for PDF uploads
+        # Admin section for PDF uploads and section removal
         with st.sidebar.expander("🔒 Διαχείριση Περιεχομένου"):
             st.write("Ανέβασμα νέων νομικών κειμένων:")
             uploaded_files = st.file_uploader(
@@ -302,6 +307,46 @@ def main():
                             st.success("Το περιεχόμενο ενημερώθηκε επιτυχώς!")
                         else:
                             st.error("Παρουσιάστηκε σφάλμα κατά την επεξεργασία των αρχείων.")
+
+            # Section removal interface
+            st.write("Διαγραφή Ενότητας:")
+            section_to_remove = st.selectbox(
+                "Επιλέξτε ενότητα προς διαγραφή:",
+                list(st.session_state.cached_categories.keys())
+            )
+            subsection_to_remove = st.selectbox(
+                "Επιλέξτε υποενότητα:",
+                list(st.session_state.cached_categories[section_to_remove].keys()) if section_to_remove else []
+            )
+
+            if section_to_remove and subsection_to_remove:
+                if st.button("Διαγραφή Ενότητας"):
+                    is_safe, references = st.session_state.validator.validate_section_removal(
+                        section_to_remove, 
+                        subsection_to_remove
+                    )
+
+                    if not is_safe:
+                        st.error("""⚠️ Προσοχή: Η διαγραφή αυτής της ενότητας θα δημιουργήσει προβλήματα!
+
+                        Οι ακόλουθες αναφορές θα σπάσουν:""")
+                        for ref in references:
+                            st.write(f"- {ref}")
+
+                        if st.checkbox("Επιβεβαίωση διαγραφής παρά τις αναφορές"):
+                            del st.session_state.cached_categories[section_to_remove][subsection_to_remove]
+                            if not st.session_state.cached_categories[section_to_remove]:
+                                del st.session_state.cached_categories[section_to_remove]
+                            st.session_state.validator.update_references()
+                            st.success("Η ενότητα διαγράφηκε επιτυχώς!")
+                            st.experimental_rerun()
+                    else:
+                        del st.session_state.cached_categories[section_to_remove][subsection_to_remove]
+                        if not st.session_state.cached_categories[section_to_remove]:
+                            del st.session_state.cached_categories[section_to_remove]
+                        st.session_state.validator.update_references()
+                        st.success("Η ενότητα διαγράφηκε επιτυχώς!")
+                        st.experimental_rerun()
 
 
         # Category selection
