@@ -34,7 +34,8 @@ class LawUpdater:
                 "Κώδικας Δεοντολογίας": "/attached_assets/kodikas deontologias.pdf",
                 "Χρήση Οπλισμού": "/attached_assets/nomos peri xrhshs oplismoy.pdf",
                 "Πειθαρχικό Δίκαιο": "/attached_assets/peitharxiko dikaio astynomikon.pdf",
-                "Χρόνος Εργασίας": "/attached_assets/xronos ergasias astynomikon.pdf"
+                "Χρόνος Εργασίας": "/attached_assets/xronos ergasias astynomikon.pdf",
+                "Ν.3169/2003 χρήση όπλου": "/attached_assets/nomos peri xrhshs oplismoy.pdf"
             }
         }
         self.last_update = self._load_last_update()
