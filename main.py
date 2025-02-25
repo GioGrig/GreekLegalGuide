@@ -34,14 +34,17 @@ def get_source_url(category: str, subcategory: str = None) -> tuple:
     law_updater = LawUpdater()
     source = law_updater.sources.get(category, "#")
 
-    if isinstance(source, dict) and subcategory:
-        source = source.get(subcategory, "#")
+    if isinstance(source, dict):
+        if 'local' in source:  # Special case for ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ with both local and external sources
+            return (source['local'], True, source.get('external'))
+        elif subcategory:  # Case for subcategories like in ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ
+            source = source.get(subcategory, "#")
 
     if source and isinstance(source, str) and source.startswith("/"):
         pdf_path = source[1:]
         if os.path.exists(pdf_path):
-            return (pdf_path, True)
-    return (source, False)
+            return (pdf_path, True, None)
+    return (source, False, None)
 
 def display_pdf_download(source_path: str, custom_label: Optional[str] = None, subcategory: Optional[str] = None) -> None:
     """Display PDF download button with custom label"""
@@ -378,11 +381,34 @@ def main():
                         logger.error(f"Criminal procedure PDF not found at: {criminal_procedure_path}")
                         st.error("Το αρχείο PDF του Κώδικα Ποινικής Δικονομίας δεν είναι διαθέσιμο.")
 
+                # Get source information including external link if available
+                source_path, is_local, external_url = get_source_url(selected_category)
+
+                # Display both local PDF download and external link if available
+                if selected_category == "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ":
+                    st.markdown("""
+                    ### 📚 Ποινικός Κώδικας
+
+                    Διαθέσιμες πηγές:
+                    """)
+                    if is_local:
+                        display_pdf_download(source_path[1:], "Κατέβασμα Τοπικού Αντιγράφου (PDF)")
+
+                    if external_url:
+                        st.markdown(f"""
+                        <div style="text-align: right; margin-bottom: 20px;">
+                            <a href="{external_url}" target="_blank" style="color: #1f4e79;">
+                                📄 Επίσημο PDF Υπουργείου Δικαιοσύνης
+                            </a>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+
                 # Display category content
                 if selected_category in st.session_state.cached_categories:
                     for subcategory, articles in st.session_state.cached_categories[selected_category].items():
                         with st.expander(f"📚 {subcategory}", expanded=True):
-                            source_path, is_local = get_source_url(selected_category, subcategory)
+                            source_path, is_local, external_url = get_source_url(selected_category, subcategory)
 
                             if source_path != "#":
                                 if is_local:

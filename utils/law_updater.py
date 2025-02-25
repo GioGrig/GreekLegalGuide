@@ -8,7 +8,10 @@ class LawUpdater:
     def __init__(self, data_path: str = "data/law_database.json"):
         self.data_path = data_path
         self.sources = {
-            "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "/attached_assets/Ποινικός-Κώδικας.pdf",
+            "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": {
+                "local": "/attached_assets/Ποινικός-Κώδικας.pdf",
+                "external": "https://www.ministryofjustice.gr/wp-content/uploads/2019/10/Ποινικός-Κώδικας.pdf"
+            },
             "ΕΙΔΙΚΟΙ ΠΟΙΝΙΚΟΙ ΝΟΜΟΙ": "/attached_assets/eidikoi_poinikoi_nomoi-poinologi.pdf",
             "ΚΩΔΙΚΑΣ ΠΟΙΝΙΚΗΣ ΔΙΚΟΝΟΜΙΑΣ": "/attached_assets/Κώδικας-Ποινικής-Δικονομίας.pdf",
             "ΝΑΡΚΩΤΙΚΑ": "/attached_assets/nomos peri narkotikon.pdf",
@@ -93,14 +96,24 @@ class LawUpdater:
 
         for category, url in self.sources.items():
             print(f"Checking updates for {category}...")
-            content = self.fetch_latest_content(url)
+            if isinstance(url, dict):
+                for key, u in url.items():
+                    content = self.fetch_latest_content(u)
+                    if content:
+                        processed_data = self.process_content(content)
+                        if processed_data['articles']:
+                            current_data['categories'][category] = processed_data
+                            current_data['last_update'][category] = datetime.now().isoformat()
+                            updated = True
+            else:
+                content = self.fetch_latest_content(url)
+                if content:
+                    processed_data = self.process_content(content)
+                    if processed_data['articles']:
+                        current_data['categories'][category] = processed_data
+                        current_data['last_update'][category] = datetime.now().isoformat()
+                        updated = True
 
-            if content:
-                processed_data = self.process_content(content)
-                if processed_data['articles']:
-                    current_data['categories'][category] = processed_data
-                    current_data['last_update'][category] = datetime.now().isoformat()
-                    updated = True
 
         if updated:
             self._save_data(current_data)
