@@ -9,6 +9,7 @@ class LawUpdater:
         self.data_path = data_path
         self.sources = {
             "ΠΟΙΝΙΚΟΣ ΚΩΔΙΚΑΣ": "/attached_assets/Ποινικός-Κώδικας.pdf",
+            "ΕΙΔΙΚΟΙ ΠΟΙΝΙΚΟΙ ΝΟΜΟΙ": "/attached_assets/eidikoi_poinikoi_nomoi-poinologi.pdf",
             "ΝΑΡΚΩΤΙΚΑ": "/attached_assets/nomos peri narkotikon.pdf",
             "ΟΠΛΑ": "/attached_assets/Ν.-2168.1993-ΠΕΡΙ-ΟΠΛΩΝ-ΕΠΙΚΑΙΡΟΠΟΙΗΜΕΝΟΣ.pdf",
             "ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ (Ν.3500/2006)": {
